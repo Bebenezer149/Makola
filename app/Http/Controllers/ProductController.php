@@ -115,7 +115,7 @@ class ProductController extends Controller
         }
     }
 
-    public function showStore(Request $request){
+    public function showStore(Request $request,){
         $link=$request->link;
 
         $vendor=User::where('link', $link)->firstOrFail();
@@ -128,4 +128,7 @@ class ProductController extends Controller
         ]);
 
     }
+
+   
 }
+

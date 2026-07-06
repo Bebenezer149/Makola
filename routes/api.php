@@ -19,7 +19,7 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 // ------------------------------------Product Routes------------------------------------------
 
-
+Route::get('/show-products', [ProductController::class, 'showStore']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/create-product', [ProductController::class, 'createProduct']);
     Route::get('/products', [ProductController::class, 'fetchProducts']);
@@ -29,8 +29,8 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 // -------------------------------------Order Routes-----------------------------------------------
+Route::post('/create-order', [OrderController::class, 'createOrder']);
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/create-order', [OrderController::class, 'createOrder']);
     Route::get('/orders', [OrderController::class, 'fetchOrders']);
     Route::get('/get-one-order', [OrderController::class, 'fetchOneOrder']);
     Route::put('/update-order', [OrderController::class, 'updateOrder']);
