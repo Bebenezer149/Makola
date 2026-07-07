@@ -14,6 +14,8 @@ class OrderItem extends Model
         'subtotal',
         'quantity'
     ];
+
+    protected $table='orderitems';
     public function order(){
        return $this->belongsTo(Order::class, 'order_id');
     }
