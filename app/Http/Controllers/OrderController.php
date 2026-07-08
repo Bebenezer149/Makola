@@ -34,10 +34,11 @@ class OrderController extends Controller
 
         $total = 0;
 
+
         foreach ($request->items as $item) {
             $product = Product::findOrFail($item['product_id']);
             $subtotal = $product->price * $item['quantity'];
-
+            $reduce = $product->quantity - $item['quantity'];
             $orderItem = OrderItem::create([
                 'product_id' => $product->id,
                 'order_id' => $order->id,
@@ -46,12 +47,17 @@ class OrderController extends Controller
                 'subtotal' => $subtotal,
 
             ]);
+            $product->update([
+                'quantity' => $reduce,
+                'status'=> $reduce === 0 ? 'OUT_OF_STOCK':'AVAILABLE'
+            ]);
             $total += $subtotal;
         }
 
         $order->update([
             'total_amount' => $total
         ]);
+
 
         return response()->json([
             'message' => 'Order placed successfully',
