@@ -11,9 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        //
         Schema::table('orders', function (Blueprint $table) {
-            $table->enum('status', ['DELIVERED,PENDING'])->change();
+            $table->string('status')->default('PENDING')->change();
         });
     }
 
@@ -22,11 +21,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        //
         Schema::table('orders', function (Blueprint $table) {
             $table->enum('status', [
                 'AVAILABLE',
-                'OUT_OF_STOCK'
+                'OUT_OF_STOCK',
             ])->change();
         });
     }

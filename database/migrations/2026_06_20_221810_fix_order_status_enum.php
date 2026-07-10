@@ -1,8 +1,6 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -11,13 +9,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        //
-        Schema::table('orders', function (Blueprint $table) {
-            $table->enum('status', [
-                'DELIVERED',
-                'PENDING'
-            ])->change();
-        });
+        // Status is stored as a string; allowed values are validated in the application.
     }
 
     /**
@@ -26,11 +18,5 @@ return new class extends Migration
     public function down(): void
     {
         //
-        Schema::table('orders', function (Blueprint $table) {
-            $table->enum('status', [
-                'AVAILABLE',
-                'OUT_OF_STOCK'
-            ])->change();
-        });
     }
 };
