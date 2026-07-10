@@ -23,11 +23,8 @@ return [
     'allowed_methods' => ['*'],
 
     'allowed_origins' => array_values(array_filter(array_map(
-        static fn(string $origin): string => rtrim(trim($origin), '/'),
-        explode(',', env('CORS_ALLOWED_ORIGINS', implode(',', [
-
-            'https://blue-space-app.netlify.app/',
-        ])))
+        static fn (string $origin): string => rtrim(trim($origin), '/'),
+        explode(',', env('CORS_ALLOWED_ORIGINS', env('FRONTEND_URL', 'http://localhost:5174')))
     ))),
 
     'allowed_origins_patterns' => [],
@@ -38,6 +35,6 @@ return [
 
     'max_age' => 0,
 
-    'supports_credentials' => true,
+    'supports_credentials' => env('CORS_SUPPORTS_CREDENTIALS', false),
 
 ];

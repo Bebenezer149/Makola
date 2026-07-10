@@ -42,6 +42,9 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction
 
 RUN chown -R www-data:www-data storage bootstrap/cache
 
+COPY .docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
 EXPOSE 80
 
-CMD php artisan config:clear && /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisor.conf
+CMD ["/usr/local/bin/entrypoint.sh"]

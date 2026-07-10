@@ -1,0 +1,41 @@
+services:
+  - type: web
+    name: makola-backend
+    runtime: docker
+    plan: free
+    healthCheckPath: /up
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: LOG_LEVEL
+        value: error
+      - key: APP_KEY
+        generateValue: true
+      - key: APP_URL
+        sync: false
+      - key: FRONTEND_URL
+        value: https://blue-space-app.netlify.app
+      - key: CORS_ALLOWED_ORIGINS
+        value: https://blue-space-app.netlify.app
+      - key: SANCTUM_STATEFUL_DOMAINS
+        value: blue-space-app.netlify.app
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_URL
+        fromDatabase:
+          name: makola-db
+          property: connectionString
+      - key: SESSION_DRIVER
+        value: database
+      - key: CACHE_STORE
+        value: database
+      - key: QUEUE_CONNECTION
+        value: database
+
+databases:
+  - name: makola-db
+    plan: free
+    databaseName: makola
+    user: makola
