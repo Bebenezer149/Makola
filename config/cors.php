@@ -17,16 +17,12 @@ return [
 
     'paths' => [
         'api/*',
-        'create-product',
-        'login',
-        'register',
-        'products',
         'sanctum/csrf-cookie'
     ],
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['*'],
+    'allowed_origins' => ['http://localhost:5174/'],
 
     'allowed_origins_patterns' => [],
 
