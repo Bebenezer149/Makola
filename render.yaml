@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: makola-backend
+    name: makola-2
     runtime: docker
     plan: free
     healthCheckPath: /up
@@ -14,7 +14,7 @@ services:
       - key: APP_KEY
         generateValue: true
       - key: APP_URL
-        sync: false
+        value: https://makola-2.onrender.com
       - key: FRONTEND_URL
         value: https://blue-space-app.netlify.app
       - key: CORS_ALLOWED_ORIGINS
