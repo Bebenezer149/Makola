@@ -12,9 +12,16 @@ COPY .docker/supervisor.conf /etc/supervisor/conf.d/supervisor.conf
 WORKDIR /var/www
 
 # Copy project files
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Set working directory
+WORKDIR /var/www
+
+# Copy project files
 COPY . .
-RUN curl -sS https://getcomposer.org | php -- --install-dir=/usr/local/bin --filename=composer
-RUN composer install --no-dev --optimize-autoloader
+
+# Run composer installation
+RUN composer install --no-dev --optimize-autoloader --no-interaction
 
 # Set permissions for Laravel
 RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
