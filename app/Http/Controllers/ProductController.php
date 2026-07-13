@@ -11,81 +11,26 @@ use Illuminate\Support\Facades\Log;
 class ProductController extends Controller
 {
     //
-   public function createProduct(Request $request)
-    {
-        try {
-            Log::info('=== PRODUCT CREATION STARTED ===');
-            Log::info('User ID: ' . auth()->id());
-            Log::info('Content-Type: ' . $request->header('Content-Type'));
-            
-            // Check if file exists
-            Log::info('Has file? ' . ($request->hasFile('img') ? 'YES' : 'NO'));
-            
-            if ($request->hasFile('img')) {
-                $file = $request->file('img');
-                Log::info('File name: ' . $file->getClientOriginalName());
-                Log::info('File size: ' . $file->getSize() . ' bytes');
-                Log::info('File mime: ' . $file->getMimeType());
-                Log::info('Is valid? ' . ($file->isValid() ? 'YES' : 'NO'));
-            }
-
-            // Validate
-            Log::info('Starting validation...');
-            $validated = $request->validate([
-                'product_name' => 'required|string|max:255',
-                'description' => 'required|string|max:255',
-                'price' => 'required|numeric',
-                'quantity' => 'required|integer',
-                'img' => 'required|image|max:5120',
-                'status' => 'required|in:Available,Out_Of_Stock'
-            ]);
-            Log::info('Validation passed!');
-
-            // Upload to Cloudinary
-            Log::info('Uploading to Cloudinary...');
-            try {
-                $uploaded = Cloudinary::upload(
-                    $request->file('img')->getRealPath(),
-                    ['folder' => 'makola-products']
-                );
-                $validated['img'] = $uploaded->getSecurePath();
-                Log::info('Cloudinary upload successful! URL: ' . $validated['img']);
-            } catch (\Exception $e) {
-                Log::error('Cloudinary error: ' . $e->getMessage());
-                return response()->json([
-                    'error' => 'Cloudinary upload failed: ' . $e->getMessage()
-                ], 500);
-            }
-
-            // Create product
-            Log::info('Creating product in database...');
-            $product = Product::create([
-                'vendor_id' => auth()->id(),
-                ...$validated
-            ]);
-            Log::info('Product created! ID: ' . $product->id);
-
-            return response()->json([
-                'message' => 'Product created successfully',
-                'product' => $product
-            ], 201);
-
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            Log::error('Validation failed: ' . json_encode($e->errors()));
-            return response()->json(['errors' => $e->errors()], 422);
-            
-        } catch (\Exception $e) {
-            Log::error('GENERAL ERROR: ' . $e->getMessage());
-            Log::error('File: ' . $e->getFile() . ':' . $e->getLine());
-            Log::error('Trace: ' . $e->getTraceAsString());
-            
-            return response()->json([
-                'error' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine()
-            ], 500);
-        }
+  public function createProduct(Request $request)
+{
+    try {
+        // Just dump everything to see what's coming
+        return response()->json([
+            'message' => 'Request received successfully',
+            'all_data' => $request->all(),
+            'has_file' => $request->hasFile('img'),
+            'user_id' => auth()->id(),
+            'is_authenticated' => auth()->check(),
+            'headers' => $request->headers->all()
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => $e->getMessage(),
+            'line' => $e->getLine(),
+            'file' => $e->getFile()
+        ], 500);
     }
+}
     public function fetchProducts(Request $request)
     {
         $foundProducts = Product::where('vendor_id', auth()->id())->get();
