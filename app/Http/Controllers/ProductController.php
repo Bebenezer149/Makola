@@ -10,37 +10,48 @@ use Illuminate\Http\Request;
 class ProductController extends Controller
 {
     //
-    public function createProduct(Request $request)
-    {
-
+public function createProduct(Request $request)
+{
+    try {
 
         $validated = $request->validate([
             'product_name' => 'required|string|max:255',
             'description' => 'required|string|max:255',
-            'price' => 'required|integer',
+            'price' => 'required|numeric',
             'quantity' => 'required|integer',
             'img' => 'required|image|max:5120',
             'status' => 'required|in:AVAILABLE,OUT_OF_STOCK,Available,Out_Of_Stock',
         ]);
 
-        $validated['status'] = $this->normalizeProductStatus($validated['status']);
-        $uploaded = Cloudinary::upload(
-            $request->file('img')->getRealPath(),
-            [
-                'folder' => 'makola-products'
-            ]
-        );
+        Log::info('Validation passed');
 
-        $validated['img'] = $uploaded->getSecurePath();
+        $path = $request->file('img')->store('products', 'public');
+
+        $url = asset('storage/' . $path);
+        $validated['img'] = $url;
         $product = Product::create([
             'vendor_id' => auth()->id(),
             ...$validated
         ]);
+
+        Log::info('Product created');
+
         return response()->json([
-            'message' => 'Product Created Successfully',
+            'message' => 'Success',
             'product' => $product
         ]);
+
+    } catch (\Throwable $e) {
+
+        Log::error($e);
+
+        return response()->json([
+            'message' => $e->getMessage(),
+            'line' => $e->getLine(),
+            'file' => $e->getFile()
+        ],500);
     }
+}
     public function fetchProducts(Request $request)
     {
         $foundProducts = Product::where('vendor_id', auth()->id())->get();
