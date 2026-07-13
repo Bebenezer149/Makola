@@ -9,32 +9,50 @@ use Illuminate\Http\Request;
 class ProductController extends Controller
 {
     //
-    public function createProduct(Request $request)
-    {
-
+public function createProduct(Request $request)
+{
+    try {
 
         $validated = $request->validate([
             'product_name' => 'required|string|max:255',
             'description' => 'required|string|max:255',
-            'price' => 'required|integer',
+            'price' => 'required|numeric',
             'quantity' => 'required|integer',
             'img' => 'required|image',
             'status' => 'required|in:Available,Out_Of_Stock'
         ]);
 
+        Log::info('Validation passed');
+
         $path = $request->file('img')->store('products', 'public');
 
-        $url = asset('storage/' . $path);
-        $validated['img'] = $url;
+        Log::info('Image stored', ['path' => $path]);
+
+        $validated['img'] = asset('storage/'.$path);
+
         $product = Product::create([
             'vendor_id' => auth()->id(),
             ...$validated
         ]);
+
+        Log::info('Product created');
+
         return response()->json([
-            'message' => 'Product Created Successfully',
+            'message' => 'Success',
             'product' => $product
         ]);
+
+    } catch (\Throwable $e) {
+
+        Log::error($e);
+
+        return response()->json([
+            'message' => $e->getMessage(),
+            'line' => $e->getLine(),
+            'file' => $e->getFile()
+        ],500);
     }
+}
     public function fetchProducts(Request $request)
     {
         $foundProducts = Product::where('vendor_id', auth()->id())->get();
