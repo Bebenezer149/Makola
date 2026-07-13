@@ -1,0 +1,4 @@
+# Optional Railway config.
+# This project is already Docker-based; Railway can deploy it using Dockerfile directly.
+
+

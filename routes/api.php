@@ -6,6 +6,11 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+
+Route::get('/up', function () {
+    return response()->json(['status' => 'ok']);
+});
+
 Route::post('/test-product', function (Request $request) {
     try {
         // Log everything
@@ -79,10 +84,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/get-one-order', [OrderController::class, 'fetchOneOrder']);
     Route::put('/update-order', [OrderController::class, 'updateOrder']);
     Route::delete('delete-order', [OrderController::class, 'deleteOrder']);
-    ROute::put('/update-status', [OrderController::class, 'updateStatus']);
+    Route::put('/update-status', [OrderController::class, 'updateStatus']);
 });
 
 // --------------------------------Dashboard Routes--------------------------------------------
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'Dashboard']);
 });
+
+
+

@@ -7,7 +7,33 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## Railway / Docker deployment
+
+This backend is configured to run via the included Dockerfile (nginx + php-fpm + supervisor). Recommended steps for Railway:
+
+1. Ensure you have Railway environment variables set (at minimum):
+   - APP_KEY
+   - APP_URL
+   - DB_CONNECTION=pgsql
+   - DB_HOST, DB_PORT, DB_DATABASE, DB_USERNAME, DB_PASSWORD (or use Railway-managed DB URL variables)
+   - SESSION_DRIVER=database
+   - CACHE_STORE=database
+   - QUEUE_CONNECTION=database
+   - SANCTUM_STATEFUL_DOMAINS
+   - CORS_ALLOWED_ORIGINS
+
+2. Deploy using the Dockerfile (Railway will build the image automatically when using Docker runtime).
+
+3. The container entrypoint will:
+   - create the storage symlink (`php artisan storage:link --force`)
+   - run database migrations once (marker file `/tmp/.migrated`)
+
+4. Healthcheck: the API exposes `GET /api/up` returning `{ "status": "ok" }`.
+
+---
+
 ## About Laravel
+
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
 
