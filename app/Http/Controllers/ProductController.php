@@ -11,53 +11,48 @@ use Illuminate\Support\Facades\Log;
 class ProductController extends Controller
 {
     //
-    public function createProduct(Request $request)
-    {
-        try {
+public function createProduct(Request $request)
+{
+    try {
 
-            $validated = $request->validate([
-                'product_name' => 'required|string|max:255',
-                'description' => 'required|string|max:255',
-                'price' => 'required|numeric',
-                'quantity' => 'required|integer',
-                'img' => 'required|image|max:5120',
-                'status' => 'required|in:AVAILABLE,OUT_OF_STOCK,Available,Out_Of_Stock',
-            ]);
+        $validated = $request->validate([
+            'product_name' => 'required|string|max:255',
+            'description' => 'required|string|max:255',
+            'price' => 'required|numeric',
+            'quantity' => 'required|integer',
+            'img' => 'required|image|max:5120',
+            'status' => 'required|in:AVAILABLE,OUT_OF_STOCK,Available,Out_Of_Stock',
+        ]);
 
-            Log::info('Validation passed');
+        Log::info('Validation passed');
 
+        $path = $request->file('img')->store('products', 'public');
 
+        $url = asset('storage/' . $path);
+        $validated['img'] = $url;
+        $product = Product::create([
+            'vendor_id' => auth()->id(),
+            ...$validated
+        ]);
 
-            $uploaded = Cloudinary::upload(
-                $request->file('img')->getRealPath(),
-                [
-                    'folder' => 'makola-products'
-                ]
-            );
+        Log::info('Product created');
 
-            $validated['img'] = $uploaded->getSecurePath();
-            $product = Product::create([
-                'vendor_id' => auth()->id(),
-                ...$validated
-            ]);
+        return response()->json([
+            'message' => 'Success',
+            'product' => $product
+        ]);
 
-            Log::info('Product created');
+    } catch (\Throwable $e) {
 
-            return response()->json([
-                'message' => 'Success',
-                'product' => $product
-            ]);
-        } catch (\Throwable $e) {
+        Log::error($e);
 
-            Log::error($e);
-
-            return response()->json([
-                'message' => $e->getMessage(),
-                'line' => $e->getLine(),
-                'file' => $e->getFile()
-            ], 500);
-        }
+        return response()->json([
+            'message' => $e->getMessage(),
+            'line' => $e->getLine(),
+            'file' => $e->getFile()
+        ],500);
     }
+}
     public function fetchProducts(Request $request)
     {
         $foundProducts = Product::where('vendor_id', auth()->id())->get();
