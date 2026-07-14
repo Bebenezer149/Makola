@@ -11,24 +11,46 @@ use Illuminate\Support\Facades\Log;
 class ProductController extends Controller
 {
     //
-  public function createProduct(Request $request)
+public function createProduct(Request $request)
 {
     try {
-        // Just dump everything to see what's coming
-        return response()->json([
-            'message' => 'Request received successfully',
-            'all_data' => $request->all(),
-            'has_file' => $request->hasFile('img'),
-            'user_id' => auth()->id(),
-            'is_authenticated' => auth()->check(),
-            'headers' => $request->headers->all()
+
+        $validated = $request->validate([
+            'product_name' => 'required|string|max:255',
+            'description' => 'required|string|max:255',
+            'price' => 'required|numeric',
+            'quantity' => 'required|integer',
+            'img' => 'required|image|max:5120',
+            'status' => 'required|in:AVAILABLE,OUT_OF_STOCK,Available,Out_Of_Stock',
         ]);
-    } catch (\Exception $e) {
+
+        Log::info('Validation passed');
+
+        $path = $request->file('img')->store('products', 'public');
+
+        $url = asset('storage/' . $path);
+        $validated['img'] = $url;
+        $product = Product::create([
+            'vendor_id' => auth()->id(),
+            ...$validated
+        ]);
+
+        Log::info('Product created');
+
         return response()->json([
-            'error' => $e->getMessage(),
+            'message' => 'Success',
+            'product' => $product
+        ]);
+
+    } catch (\Throwable $e) {
+
+        Log::error($e);
+
+        return response()->json([
+            'message' => $e->getMessage(),
             'line' => $e->getLine(),
             'file' => $e->getFile()
-        ], 500);
+        ],500);
     }
 }
     public function fetchProducts(Request $request)

@@ -4,12 +4,11 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
+// use App\Http\Controllers\ProductController as ControllersProductController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/up', function () {
-    return response()->json(['status' => 'ok']);
-});
+
 
 Route::post('/test-product', function (Request $request) {
     try {
@@ -64,7 +63,7 @@ Route::post('/login', [AuthController::class, 'loginVendor']);
 
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/logout', [AuthController::class, 'logoutVendor']);
+    Route::post('/logout', [AuthController::class, 'logoutVendor'])->name('login');
 });
 // ------------------------------------Product Routes------------------------------------------
 
