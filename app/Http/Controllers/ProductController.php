@@ -26,10 +26,10 @@ public function createProduct(Request $request)
 
         Log::info('Validation passed');
 
-        $path = $request->file('img')->store('products', 'public');
-
-        $url = asset('storage/' . $path);
-        $validated['img'] = $url;
+      $uploadedFileUrl = Cloudinary::upload($request->file('img')->getRealPath(), [
+            'folder' => 'products'
+        ])->getSecurePath();
+        $validated['img'] =  $uploadedFileUrl;
         $product = Product::create([
             'vendor_id' => auth()->id(),
             ...$validated
