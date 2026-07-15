@@ -21,7 +21,7 @@ public function createProduct(Request $request)
             'price' => 'required|numeric',
             'quantity' => 'required|integer',
             'img' => 'required|image|max:5120',
-            'status' => 'required|in:AVAILABLE,OUT_OF_STOCK,Available,Out_Of_Stock',
+            'status' => 'nullable|in:AVAILABLE,OUT_OF_STOCK,Available,Out_Of_Stock',
         ]);
 
         Log::info('Validation passed');
