@@ -20,20 +20,23 @@ public function createProduct(Request $request)
             'description' => 'required|string|max:255',
             'price' => 'required|numeric',
             'quantity' => 'required|integer',
-            'img' => 'required|image|max:5120',
-            'status' => 'nullable|in:AVAILABLE,OUT_OF_STOCK,Available,Out_Of_Stock',
+            'img' => 'sometimes|image|max:5120',
+            'status' => 'required|in:AVAILABLE,OUT_OF_STOCK,Available,Out_Of_Stock',
         ]);
 
         Log::info('Validation passed');
 
-        $path = $request->file('img')->store('products', 'public');
+        if ($request->hasFile('img')) {
+            $path = $request->file('img')->store('products', 'public');
+            $validated['img'] = asset('storage/' . $path);
+        }
 
-        $url = asset('storage/' . $path);
-        $validated['img'] = $url;
-        $product = Product::create([
-            'vendor_id' => auth()->id(),
-            ...$validated
-        ]);
+        // Only include img when it was actually uploaded.
+        $payload = array_merge(
+            ['vendor_id' => auth()->id()],
+            $validated
+        );
+        $product = Product::create($payload);
 
         Log::info('Product created');
 
