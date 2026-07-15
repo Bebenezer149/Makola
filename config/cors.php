@@ -29,13 +29,11 @@ return [
     'allowed_methods' => ['*'],
 
     'allowed_origins' => array_values(array_filter(array_map(
-        static fn (string $origin): string => rtrim(trim($origin), '/'),
+        static fn(string $origin): string => rtrim(trim($origin), '/'),
         explode(',', env('CORS_ALLOWED_ORIGINS', env('FRONTEND_URL', $defaultOrigins)))
     ))),
 
-    'allowed_origins_patterns' => [
-        '#^https://[\w-]+\.netlify\.app$#',
-    ],
+    'allowed_origins_patterns' => [],
 
     'allowed_headers' => ['*'],
 
