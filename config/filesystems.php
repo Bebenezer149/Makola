@@ -9,7 +9,7 @@ return [
     |
     | Here you may specify the default filesystem disk that should be used
     | by the framework. The "local" disk, as well as a variety of cloud
-    | based disks are available to your application for file storage.
+    | based disks are available     to your application for file storage.
     |
     */
 
@@ -27,7 +27,13 @@ return [
     | Supported drivers: "local", "ftp", "sftp", "s3"
     |
     */
-
+    'supabase' => [
+    'driver' => 'supabase',
+    'key' => env('SUPABASE_SECRET_ACCESS_KEY'), // Use the service_role key here
+    'bucket' => env('SUPABASE_STORAGE_BUCKET', 'product-images'),
+    'endpoint' => env('SUPABASE_STORAGE_ENDPOINT'), // e.g. https://xxxxxx.supabase.co
+    'public' => true,
+],
     'disks' => [
 
         'local' => [
