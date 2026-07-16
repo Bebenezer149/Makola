@@ -20,6 +20,11 @@ return Application::configure(basePath: dirname(__DIR__))
                 | Request::HEADER_X_FORWARDED_PORT
                 | Request::HEADER_X_FORWARDED_PROTO,
         );
+
+        // Ensure CORS headers are present even on error responses (500)
+        $middleware->append(
+            \App\Http\Middleware\Cors::class
+        );
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
