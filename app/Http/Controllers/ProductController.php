@@ -8,6 +8,7 @@ use App\Services\SupabaseStorageService;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
@@ -32,7 +33,8 @@ class ProductController extends Controller
 
             // Only upload when an image was provided
             if ($request->hasFile('img')) {
-                $imageUrl = $this->storage->uploadProductImage($request->file('img'));
+                $file=$request->file('img');
+                $imageUrl =Storage::disk('supabase')->putFile('products', $file);
                 $validated['img'] = $imageUrl;
             }
 
