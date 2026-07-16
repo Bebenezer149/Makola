@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\User;
+use App\Services\SupabaseStorageService;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -11,51 +12,51 @@ use Illuminate\Support\Facades\Log;
 class ProductController extends Controller
 {
     //
-public function createProduct(Request $request)
-{
-    try {
+    public function __construct(
+        private readonly SupabaseStorageService $storage
+    ) {}
+    public function createProduct(Request $request)
+    {
+        try {
 
-        $validated = $request->validate([
-            'product_name' => 'required|string|max:255',
-            'description' => 'required|string|max:255',
-            'price' => 'required|numeric',
-            'quantity' => 'required|integer',
-            'img' => 'sometimes|image|max:5120',
-            'status' => 'required|in:AVAILABLE,OUT_OF_STOCK,Available,Out_Of_Stock',
-        ]);
+            $validated = $request->validate([
+                'product_name' => 'required|string|max:255',
+                'description' => 'required|string|max:255',
+                'price' => 'required|numeric',
+                'quantity' => 'required|integer',
+                'img' => 'sometimes|image|max:5120',
+                'status' => 'required|in:AVAILABLE,OUT_OF_STOCK,Available,Out_Of_Stock',
+            ]);
 
-        Log::info('Validation passed');
+            Log::info('Validation passed');
 
-        if ($request->hasFile('img')) {
-            $path = $request->file('img')->store('products', 'public');
-            $validated['img'] = asset('storage/' . $path);
+
+            $imageUrl = $this->storage->uploadProductImage($request->file('img'));
+            $validated['img'] = $imageUrl;
+
+            $payload = array_merge(
+                ['vendor_id' => auth()->id()],
+                $validated
+            );
+            $product = Product::create($payload);
+
+            Log::info('Product created');
+
+            return response()->json([
+                'message' => 'Success',
+                'product' => $product
+            ]);
+        } catch (\Throwable $e) {
+
+            Log::error($e);
+
+            return response()->json([
+                'message' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile()
+            ], 500);
         }
-
-        // Only include img when it was actually uploaded.
-        $payload = array_merge(
-            ['vendor_id' => auth()->id()],
-            $validated
-        );
-        $product = Product::create($payload);
-
-        Log::info('Product created');
-
-        return response()->json([
-            'message' => 'Success',
-            'product' => $product
-        ]);
-
-    } catch (\Throwable $e) {
-
-        Log::error($e);
-
-        return response()->json([
-            'message' => $e->getMessage(),
-            'line' => $e->getLine(),
-            'file' => $e->getFile()
-        ],500);
     }
-}
     public function fetchProducts(Request $request)
     {
         $foundProducts = Product::where('vendor_id', auth()->id())->get();
