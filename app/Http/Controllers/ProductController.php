@@ -30,9 +30,12 @@ class ProductController extends Controller
 
             Log::info('Validation passed');
 
+            // Only upload when an image was provided
+            if ($request->hasFile('img')) {
+                $imageUrl = $this->storage->uploadProductImage($request->file('img'));
+                $validated['img'] = $imageUrl;
+            }
 
-            $imageUrl = $this->storage->uploadProductImage($request->file('img'));
-            $validated['img'] = $imageUrl;
 
             $payload = array_merge(
                 ['vendor_id' => auth()->id()],
