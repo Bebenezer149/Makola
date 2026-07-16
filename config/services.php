@@ -13,6 +13,11 @@ return [
     | a conventional file to locate the various service credentials.
     |
     */
+    'supabase' => [
+    'url' => env('SUPABASE_URL'),
+    'service_key' => env('SUPABASE_SERVICE_KEY'),
+    'bucket' => env('SUPABASE_BUCKET', 'product-images'),
+],
 
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),
