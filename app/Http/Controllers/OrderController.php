@@ -13,23 +13,23 @@ class OrderController extends Controller
     public function createOrder(Request $request)
     {
         $validated = $request->validate([
-            'vendor_id' => 'required|integer|exists:users,id',
+            // vendor_id comes from the authenticated vendor
             'customer_name' => 'required|string|max:255',
             'phone_number' => 'required|string|max:255',
             'delivery_to' => 'required|string|max:255',
             'additional_notes' => 'required|string',
-            'status' => 'nullable|in:Delivered,Pending,Confirmed,Cancelled ',
+            'status' => 'nullable|in:Delivered,Pending,Confirmed,Cancelled',
             'payment_method' => 'required|in:MOMO,CASH',
             'items' => 'required|array',
             'items.*.product_id' => 'required|integer|exists:products,id',
             'items.*.quantity' => 'required|integer|min:1',
-
         ]);
 
         $order = Order::create([
-            'vendor_id' => $request->vendor_id,
-            ...$validated
+            'vendor_id' => auth()->id(),
+            ...$validated,
         ]);
+
 
 
         $total = 0;
@@ -111,7 +111,7 @@ class OrderController extends Controller
             ]);
 
             $foundOrder->update($validated);
-            $foundOrder->load('items.product');
+            $foundOrder->load('Items.product');
             return response()->json([
                 'message' => 'Order updated Successfully',
                 'order_details' => $foundOrder
