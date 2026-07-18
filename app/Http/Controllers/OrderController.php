@@ -12,15 +12,15 @@ class OrderController extends Controller
     //
     public function createOrder(Request $request)
     {
-        
+
         $validated = $request->validate([
-           
+
             'customer_name' => 'required|string|max:255',
             'phone_number' => 'required|string|max:255',
             'delivery_to' => 'required|string|max:255',
             'additional_notes' => 'required|string',
-            
-            'status' => 'in:Delivered,Pending,Confirmed,Cancelled,',
+
+            'status' => 'in:PENDING,CONFIRMED,DELIVERED,CANCELLED',
             'payment_method' => 'required|in:MOMO,CASH',
             'items' => 'required|array',
             'items.*.product_id' => 'required|integer|exists:products,id',
@@ -30,7 +30,7 @@ class OrderController extends Controller
         // $firstProduct = Product::findOrFail($validated['items'][0]['product_id']);
 
         $order = Order::create([
-            'vendor_id' =>$request->vendor_id,
+            'vendor_id' => $request->vendor_id,
             ...$validated,
         ]);
 
@@ -53,7 +53,7 @@ class OrderController extends Controller
             ]);
             $product->update([
                 'quantity' => $reduce,
-                'status'=> $reduce === 0 ? 'OUT_OF_STOCK':'AVAILABLE'
+                'status' => $reduce === 0 ? 'OUT_OF_STOCK' : 'AVAILABLE'
             ]);
             $total += $subtotal;
         }
