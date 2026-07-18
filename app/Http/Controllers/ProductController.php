@@ -22,7 +22,7 @@ class ProductController extends Controller
                 'product_name' => 'required|string|max:255',
                 'description' => 'required|string|max:255',
                 'price' => 'required|numeric',
-                'quantity' => 'required|integer',
+                'quantity' => 'required|numeric',
                 'img' => 'required|url',
                 'status' => 'required|in:AVAILABLE,OUT_OF_STOCK,Available,Out_Of_Stock',
             ]);
@@ -96,16 +96,13 @@ class ProductController extends Controller
         $validated = $request->validate([
             'product_name' => 'string|max:255',
             'description'  => 'string',
-            'price'        => 'integer',
-            'quantity'     => 'integer',
+            'price'        => 'numeric',
+            'quantity'     => 'numeric',
             'status'       => 'in:AVAILABLE,OUT_OF_STOCK,Available,Out_Of_Stock',
-            'img'          => 'image|max:2048',
+            'img'          => 'url',
         ]);
 
-        if ($request->hasFile('img')) {
-            $path = $request->file('img')->store('products', 'public');
-            $validated['img'] = asset('storage/' . $path);
-        }
+      
 
         if (isset($validated['status'])) {
             $validated['status'] = $this->normalizeProductStatus($validated['status']);
