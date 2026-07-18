@@ -20,7 +20,7 @@ class OrderController extends Controller
             'delivery_to' => 'required|string|max:255',
             'additional_notes' => 'required|string',
 
-            'status' => 'in:PENDING,CONFIRMED,DELIVERED,CANCELLED',
+            'status' => 'nullable|in:PENDING,CONFIRMED,DELIVERED,CANCELLED',
             'payment_method' => 'required|in:MOMO,CASH',
             'items' => 'required|array',
             'items.*.product_id' => 'required|integer|exists:products,id',
