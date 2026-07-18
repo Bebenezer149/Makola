@@ -20,7 +20,7 @@ class OrderController extends Controller
             'delivery_to' => 'required|string|max:255',
             'additional_notes' => 'required|string',
 
-            'status' => 'nullable|in:PENDING,CONFIRMED,DELIVERED,CANCELLED',
+            'status' => 'nullable|in:PENDING,Confirmed,Delivered,Cancelled,Pending',
             'payment_method' => 'required|in:MOMO,CASH',
             'items' => 'required|array',
             'items.*.product_id' => 'required|integer|exists:products,id',
@@ -109,7 +109,7 @@ class OrderController extends Controller
                 'phone_number' => 'required|string|max:255',
                 'delivery_to' => 'required|string|max:255',
                 'additional_notes' => 'required|string',
-                'status' => 'nullable|in:Delivered,Pending,Confirmed,Cancelled ',
+                'status' => 'nullable|in:Delivered,Pending,Confirmed,Cancelled,PENDING',
                 'payment_method' => 'required|in:MOMO,CASH',
 
             ]);
