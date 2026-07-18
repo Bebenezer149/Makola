@@ -27,10 +27,10 @@ class OrderController extends Controller
             'items.*.quantity' => 'required|integer|min:1',
         ]);
 
-        $firstProduct = Product::findOrFail($validated['items'][0]['product_id']);
+        // $firstProduct = Product::findOrFail($validated['items'][0]['product_id']);
 
         $order = Order::create([
-            'vendor_id' =>$firstProduct->vendor_id,
+            'vendor_id' =>$request->vendor_id,
             ...$validated,
         ]);
 
