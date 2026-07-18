@@ -18,7 +18,8 @@ class OrderController extends Controller
             'phone_number' => 'required|string|max:255',
             'delivery_to' => 'required|string|max:255',
             'additional_notes' => 'required|string',
-            'status' => 'nullable|in:Delivered,Pending,Confirmed,Cancelled',
+            
+            'status' => 'nullable|in:PENDING,Delivered,Pending,Confirmed,Cancelled,AVAILABLE,OUT_OF_STOCK',
             'payment_method' => 'required|in:MOMO,CASH',
             'items' => 'required|array',
             'items.*.product_id' => 'required|integer|exists:products,id',
