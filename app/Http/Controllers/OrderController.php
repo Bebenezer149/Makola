@@ -13,7 +13,7 @@ class OrderController extends Controller
     public function createOrder(Request $request)
     {
         $validated = $request->validate([
-            // vendor_id comes from the authenticated vendor
+           
             'customer_name' => 'required|string|max:255',
             'phone_number' => 'required|string|max:255',
             'delivery_to' => 'required|string|max:255',
@@ -27,7 +27,7 @@ class OrderController extends Controller
         ]);
 
         $order = Order::create([
-            'vendor_id' => auth()->id(),
+            'vendor_id' =>$request->id,
             ...$validated,
         ]);
 
