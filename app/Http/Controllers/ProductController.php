@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\User;
-use App\Services\SupabaseStorageService;
-use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+// use App\Services\SupabaseStorageService;
+// use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -13,9 +13,7 @@ use Illuminate\Support\Facades\Storage;
 class ProductController extends Controller
 {
     //
-    public function __construct(
-        private readonly SupabaseStorageService $storage
-    ) {}
+   
     public function createProduct(Request $request)
     {
         try {
@@ -25,18 +23,11 @@ class ProductController extends Controller
                 'description' => 'required|string|max:255',
                 'price' => 'required|numeric',
                 'quantity' => 'required|integer',
-                'img' => 'sometimes|image|max:5120',
+                'img' => 'required|url',
                 'status' => 'required|in:AVAILABLE,OUT_OF_STOCK,Available,Out_Of_Stock',
             ]);
 
             Log::info('Validation passed');
-
-            // Only upload when an image was provided
-            if ($request->hasFile('img')) {
-                $file=$request->file('img');
-                $imageUrl =Storage::disk('supabase')->putFile('products', $file);
-                $validated['img'] = $imageUrl;
-            }
 
 
             $payload = array_merge(
