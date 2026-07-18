@@ -12,6 +12,7 @@ class OrderController extends Controller
     //
     public function createOrder(Request $request)
     {
+        
         $validated = $request->validate([
            
             'customer_name' => 'required|string|max:255',
@@ -26,8 +27,10 @@ class OrderController extends Controller
             'items.*.quantity' => 'required|integer|min:1',
         ]);
 
+        // $firstProduct = Product::findOrFail($validated['items'][0]['product_id']);
+
         $order = Order::create([
-            'vendor_id' =>$request->id,
+            'vendor_id' =>$request->vendor_id,
             ...$validated,
         ]);
 
