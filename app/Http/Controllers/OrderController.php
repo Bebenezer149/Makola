@@ -67,7 +67,7 @@ class OrderController extends Controller
 
     public function fetchOrders(Request $request)
     {
-        $foundOrder = Order::where('vendor_id', auth()->id())->latest()->get();
+        $foundOrder = Order::where('vendor_id', auth()->id())->get();
 
 
         return response()->json([
