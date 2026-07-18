@@ -14,11 +14,11 @@ class DashboardController extends Controller
 
         $product=Product::where('vendor_id', $vendor_id)->count();
         $orders=Order::where( 'vendor_id', $vendor_id)->count();
-        $confirmedOrder=Order::where( 'vendor_id',$vendor_id)->where('status', 'Confirmed')->count();
-        $deliveredOrder=Order::where( 'vendor_id', $vendor_id)->where('status', 'Delivered')->count();
-        $cancelledOrder=Order::where( 'vendor_id', $vendor_id)->where('status', 'Cancelled')->count();
-        $pendingOrders=Order::where( 'vendor_id',$vendor_id)->where('status', 'Pending')->count();
-        $totalRevenue=Order::where('vendor_id', $vendor_id)->where('status','Delivered')->sum('total_amount');
+        $confirmedOrder=Order::where( 'vendor_id',$vendor_id)->where('status', 'CONFIRMED')->count();
+        $deliveredOrder=Order::where( 'vendor_id', $vendor_id)->where('status', 'DELIVERED')->count();
+        $cancelledOrder=Order::where( 'vendor_id', $vendor_id)->where('status', 'CANCELLED')->count();
+        $pendingOrders=Order::where( 'vendor_id',$vendor_id)->where('status', 'PENDING')->count();
+        $totalRevenue=Order::where('vendor_id', $vendor_id)->where('status','DELIVERED')->sum('total_amount');
 
         // if('vendor_id' !== $vendor_id){
         //     return response([
