@@ -144,7 +144,8 @@ class ProductController extends Controller
 
         return response()->json([
             'message' => 'products retrieved successfully',
-            'products' => $foundProduct
+            'products' => $foundProduct,
+            'business_name'=>$vendor->business_name
         ]);
     }
 
