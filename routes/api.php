@@ -51,7 +51,7 @@ Route::middleware('auth:sanctum')->group(function () {
 // Email Test Route
 
 Route::get('/test-email', function () {
-    $mail = Mail::raw(
+  Mail::raw(
         'Hello there this is Blue Space',
         function ($message) {
             $message->to('bebenezer149@gmail.com')->subject('Blue Space Email Test');
