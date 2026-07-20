@@ -54,7 +54,7 @@ Route::get('/test-email', function () {
   Mail::raw(
         'Hello there this is Blue Space',
         function ($message) {
-            $message->to('https://bebenezer149@gmail.com')->subject('Blue Space Email Test');
+            $message->to('bebenezer149@gmail.com')->subject('Blue Space Email Test');
         }
 
     );
