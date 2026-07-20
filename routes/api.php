@@ -6,6 +6,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 
 
@@ -47,5 +48,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'Dashboard']);
 });
 
+// Email Test Route
 
+Route::get('/test-email', function () {
+    $mail = Mail::raw(
+        'Hello there this is Blue Space',
+        function ($message) {
+            $message->to('bebenezer149@gmail.com')->subject('Blue Space Email Test');
+        }
 
+    );
+    return response()->json([
+        "message" => "Email Sent successfully"
+    ]);
+});
