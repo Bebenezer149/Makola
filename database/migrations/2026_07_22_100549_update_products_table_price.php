@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         //
-        Schema::create('products', function(Blueprint $table){
+        Schema::table('products', function(Blueprint $table){
             $table->decimal(10,2)->change();
         });
     }
@@ -23,7 +23,7 @@ return new class extends Migration
     public function down(): void
     {
         //
-        Schema::create('products', function(Blueprint $table){
+        Schema::table('products', function(Blueprint $table){
              $table->integer('price')->change();
         });
     }
