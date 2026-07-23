@@ -50,21 +50,3 @@ Route::middleware('auth:sanctum')->group(function () {
 
 // Email Test Route
 
-Route::get('/test-email', function () {
-    try {
-        Mail::raw('This is a BlueSpace test email.', function ($message) {
-            $message->to('YOUR_EMAIL@gmail.com')
-                    ->subject('BlueSpace Test');
-        });
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Mail sent successfully'
-        ]);
-    } catch (Throwable $e) {
-        return response()->json([
-            'success' => false,
-            'error' => $e->getMessage()
-        ], 500);
-    }
-});
