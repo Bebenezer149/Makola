@@ -52,5 +52,5 @@ Route::middleware('auth:sanctum')->group(function () {
 // Reset password Endpoint Test
 
 Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLink']);
-Route::post('/reset-password', [ResetPasswordController::class, 'resetPassword'])
+Route::post('/reset-password', [ResetPasswordController::class, 'resetPassword']);
 
