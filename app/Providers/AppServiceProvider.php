@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -27,6 +28,10 @@ class AppServiceProvider extends ServiceProvider
             $router->middlewareGroup('api', array_merge($router->getMiddlewareGroup('api') ?? [], [
                 \App\Http\Middleware\Cors::class,
             ]));
+        });
+
+        ResetPassword::createUrlUsing(function ($user, string $token){
+            return env("FRONTEND_URL")."/reset-password"."?token={$token}"."&email={$user->email}";
         });
     }
 }
