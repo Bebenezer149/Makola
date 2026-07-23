@@ -14,10 +14,10 @@ class ResetPasswordController extends Controller
     //
 
     public function resetPassword(Request $request){
-     $request->validate([
+        $request->validate([
             'token'=>'required',
             'email'=>'required|string',
-            'password'=>'required|password|confirmed'
+            'password'=>'required|string|min:8|confirmed'
         ]);
 
         $status=Password::reset($request->only([

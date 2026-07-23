@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -12,8 +13,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
-         
+        // Fallback: if no SMTP username/password is configured, use "log" mailer
+        // to prevent 530 "Authentication Required" crashes during password resets.
+        if (!env('MAIL_USERNAME') || !env('MAIL_PASSWORD')) {
+            Config::set('mail.default', 'log');
+        }
     }
 
     /**
