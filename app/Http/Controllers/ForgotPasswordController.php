@@ -22,11 +22,11 @@ class ForgotPasswordController extends Controller
                 'message'=>'Password link sent'
 
             ]);
-
-            return response()->json([
-                'success'=>false,
-                'message'=>"unable to send reset link"
-            ]);
         }
+
+        return response()->json([
+            'success'=>false,
+            'message'=>"unable to send reset link"
+        ]);
     }
 }
