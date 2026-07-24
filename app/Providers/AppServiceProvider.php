@@ -13,11 +13,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        // Fallback: if no SMTP username/password is configured, use "log" mailer
-        // to prevent 530 "Authentication Required" crashes during password resets.
-        if (!env('MAIL_USERNAME') || !env('MAIL_PASSWORD')) {
-            Config::set('mail.default', 'log');
-        }
+        //
     }
 
     /**
