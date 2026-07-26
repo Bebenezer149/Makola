@@ -92,11 +92,33 @@ class AuthController extends Controller
 }
 
 public function updateUser(Request $request){
-    $user=User::where($request->id,auth()->id());
+    try{
+        $user=$request->user();
+
+        if(!$user){
+             return response()->json([
+            'message' => 'Unauthenticated'
+        ], 401);
+        }
 
     $validated=$request->validate([
         'profile_picture'=>'string|nullable',
         'banner'=>'nullable|string'
     ]);
+    $user->update([$validated]);
+
+    return response()->json([
+        'message'=>"User updated successfully",
+        'data'=>$user
+    ]);
+    }
+    catch(\Exception $e){
+        return response()->json([
+            "message"=>"Unable to update user",
+            'error'=>$e
+        ]);
+    };
+
+    
 }
 }
