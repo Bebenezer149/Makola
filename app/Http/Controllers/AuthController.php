@@ -90,4 +90,13 @@ class AuthController extends Controller
         'message' => 'Logged out successfully'
     ]);
 }
+
+public function updateUser(Request $request){
+    $user=User::where($request->id,auth()->id());
+
+    $validated=$request->validate([
+        'profile_picture'=>'string|nullable',
+        'banner'=>'nullable|string'
+    ]);
+}
 }
