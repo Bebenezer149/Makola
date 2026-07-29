@@ -23,7 +23,8 @@ Route::post('/login', [AuthController::class, 'loginVendor']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logoutVendor'])->name('login');
-    Route::put('update-profile',[AuthController::class, 'updateUser']);
+    Route::put('update-profile', [AuthController::class, 'updateUser']);
+    Route::get('/user', [AuthController::class, 'fetchUser']);
 });
 // ------------------------------------Product Routes------------------------------------------
 
@@ -55,4 +56,3 @@ Route::middleware('auth:sanctum')->group(function () {
 
 Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLink']);
 Route::post('/reset-password', [ResetPasswordController::class, 'resetPassword']);
-
