@@ -105,7 +105,7 @@ public function updateUser(Request $request){
         'profile_picture'=>'string|nullable',
         'banner'=>'nullable|string'
     ]);
-    $user->update([$validated]);
+    $user->update($validated);
 
     return response()->json([
         'message'=>"User updated successfully",
