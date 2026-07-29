@@ -121,4 +121,20 @@ public function updateUser(Request $request){
 
     
 }
+
+public function fetchUser(Request $request){
+    $check=$request->user();
+    if(!$check){
+        response()->json([
+            'message'=>"Unauthenticated"
+            ],401);
+    }
+
+    $user=User::find($check->id);
+    
+    return response()->json([
+        "message"=>"User retrieeved",
+        "user"=>$user
+    ]);
+}
 }
