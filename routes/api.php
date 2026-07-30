@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('/register', [AuthController::class, 'registerVendor']);
 Route::post('/login', [AuthController::class, 'loginVendor']);
+Route::get('/users', [AuthController::class, 'fetchUsers']);
 
 
 
