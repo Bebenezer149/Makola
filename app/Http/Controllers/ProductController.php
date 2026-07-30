@@ -147,6 +147,7 @@ class ProductController extends Controller
             'products' => $foundProduct,
             'business_name'=>$vendor->business_name,
             'phone_number'=>$vendor->phone_number,
+            'profile_picture'=>$vendor->profile_picture,
             'email'=>$vendor->email
         ]);
     }
