@@ -137,4 +137,11 @@ public function fetchUser(Request $request){
         "user"=>$user
     ]);
 }
+
+public function fetchUsers(Request $request){
+    $user=User::get();
+    return $user;
+
+
+}
 }
