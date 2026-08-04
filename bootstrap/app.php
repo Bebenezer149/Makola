@@ -4,6 +4,8 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -27,5 +29,13 @@ return Application::configure(basePath: dirname(__DIR__))
         );
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->render(function (\Throwable $exception, Request $request) {
+            if (! $request->expectsJson()
+                || $exception instanceof HttpExceptionInterface
+                || $exception instanceof ValidationException) {
+                return null;
+            }
+
+            return response()->json(['message' => 'Server error. Please try again later.'], 500);
+        });
     })->create();

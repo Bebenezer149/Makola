@@ -16,9 +16,8 @@ use Illuminate\Support\Facades\Route;
 
 // ----------------------------------Authentication Routes--------------------------------------------
 
-Route::post('/register', [AuthController::class, 'registerVendor']);
-Route::post('/login', [AuthController::class, 'loginVendor']);
-Route::get('/users', [AuthController::class, 'fetchUsers']);
+Route::post('/register', [AuthController::class, 'registerVendor'])->middleware('throttle:registration');
+Route::post('/login', [AuthController::class, 'loginVendor'])->middleware('throttle:login');
 
 
 
@@ -39,7 +38,9 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 // -------------------------------------Order Routes-----------------------------------------------
-Route::post('/create-order', [OrderController::class, 'createOrder']);
+// Customers do not need an account to place an order. The vendor is derived
+// from the selected products; clients must never supply a vendor id.
+Route::post('/create-order', [OrderController::class, 'createOrder'])->middleware('throttle:orders');
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/orders', [OrderController::class, 'fetchOrders']);
     Route::get('/get-one-order', [OrderController::class, 'fetchOneOrder']);
@@ -55,5 +56,5 @@ Route::middleware('auth:sanctum')->group(function () {
 
 // Reset password Endpoint Test
 
-Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLink']);
+Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLink'])->middleware('throttle:password-reset');
 Route::post('/reset-password', [ResetPasswordController::class, 'resetPassword']);

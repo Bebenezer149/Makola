@@ -6,6 +6,8 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class OrderController extends Controller
 {
@@ -20,53 +22,78 @@ class OrderController extends Controller
             'delivery_to' => 'required|string|max:255',
             'additional_notes' => 'required|string',
 
-            'status' => 'nullable|in:PENDING,Confirmed,Delivered,Cancelled,Pending',
             'payment_method' => 'required|in:MOMO,CASH',
-            'items' => 'required|array',
+            'items' => 'required|array|min:1|max:100',
             'items.*.product_id' => 'required|integer|exists:products,id',
             'items.*.quantity' => 'required|integer|min:1',
         ]);
 
-        // $firstProduct = Product::findOrFail($validated['items'][0]['product_id']);
+        $order = DB::transaction(function () use ($validated) {
+            $requestedQuantities = collect($validated['items'])
+                ->groupBy('product_id')
+                ->map(fn ($items) => $items->sum('quantity'));
 
-        $order = Order::create([
-            'vendor_id' => $request->vendor_id,
-            ...$validated,
-        ]);
+            $products = Product::whereIn('id', $requestedQuantities->keys())
+                ->lockForUpdate()
+                ->get()
+                ->keyBy('id');
 
+            if ($products->count() !== $requestedQuantities->count()) {
+                throw ValidationException::withMessages(['items' => 'One or more products are no longer available.']);
+            }
 
+            if ($products->pluck('vendor_id')->unique()->count() !== 1) {
+                throw ValidationException::withMessages(['items' => 'An order can contain products from only one store.']);
+            }
 
-        $total = 0;
+            foreach ($requestedQuantities as $productId => $quantity) {
+                if ($products[$productId]->quantity < $quantity) {
+                    throw ValidationException::withMessages(['items' => "Insufficient stock for {$products[$productId]->product_name}."]);
+                }
+            }
 
-
-        foreach ($request->items as $item) {
-            $product = Product::findOrFail($item['product_id']);
-            $subtotal = $product->price * $item['quantity'];
-            $reduce = $product->quantity - $item['quantity'];
-            $orderItem = OrderItem::create([
-                'product_id' => $product->id,
-                'order_id' => $order->id,
-                'unit_price' => $product->price,
-                'quantity' => $item['quantity'],
-                'subtotal' => $subtotal,
-
+            $order = Order::create([
+                'vendor_id' => $products->first()->vendor_id,
+                'customer_name' => $validated['customer_name'],
+                'phone_number' => $validated['phone_number'],
+                'delivery_to' => $validated['delivery_to'],
+                'additional_notes' => $validated['additional_notes'],
+                'payment_method' => $validated['payment_method'],
+                'status' => 'PENDING',
+                'total_amount' => 0,
             ]);
-            $product->update([
-                'quantity' => $reduce,
-                'status' => $reduce === 0 ? 'OUT_OF_STOCK' : 'AVAILABLE'
-            ]);
-            $total += $subtotal;
-        }
 
-        $order->update([
-            'total_amount' => $total
-        ]);
+            $total = 0;
+            foreach ($requestedQuantities as $productId => $quantity) {
+                $product = $products[$productId];
+                $subtotal = round((float) $product->price * $quantity, 2);
+                $remainingQuantity = $product->quantity - $quantity;
+
+                OrderItem::create([
+                    'product_id' => $product->id,
+                    'order_id' => $order->id,
+                    'unit_price' => $product->price,
+                    'quantity' => $quantity,
+                    'subtotal' => $subtotal,
+                ]);
+
+                $product->update([
+                    'quantity' => $remainingQuantity,
+                    'status' => $remainingQuantity === 0 ? 'OUT_OF_STOCK' : 'AVAILABLE',
+                ]);
+                $total += $subtotal;
+            }
+
+            $order->update(['total_amount' => round($total, 2)]);
+
+            return $order;
+        }, 3);
 
 
         return response()->json([
             'message' => 'Order placed successfully',
-
-        ]);
+            'order' => $order,
+        ], 201);
     }
 
     public function fetchOrders(Request $request)
@@ -93,7 +120,7 @@ class OrderController extends Controller
         return response()->json([
             'message' => 'Found Order Successfully',
             'order_details' => $foundOrder
-        ], 201);
+        ]);
     }
     public function updateOrder(Request $request)
     {
@@ -109,7 +136,6 @@ class OrderController extends Controller
                 'phone_number' => 'required|string|max:255',
                 'delivery_to' => 'required|string|max:255',
                 'additional_notes' => 'required|string',
-                'status' => 'nullable|in:Delivered,Pending,Confirmed,Cancelled,PENDING',
                 'payment_method' => 'required|in:MOMO,CASH',
 
             ]);
@@ -125,25 +151,35 @@ class OrderController extends Controller
     public function updateStatus(Request $request)
     {
 
-        $foundOrder = Order::findOrFail($request->id);
+        $validated = $request->validate([
+            'id' => 'required|integer',
+            'status' => 'required|in:PENDING,CONFIRMED,DELIVERED,CANCELLED',
+        ]);
+
+        $foundOrder = Order::where('vendor_id', $request->user()->id)->findOrFail($validated['id']);
         if ($foundOrder->vendor_id !== auth()->id()) {
             return response([
                 'message' => 'Cannot access order',
             ], 403);
         }
-        // if ($foundOrder->status !== 'PENDING'  || $foundOrder->status !== 'CONFIRMED') {
-        //     return response()->json([
-        //         'message' => 'Only Pending Orders can be Confirmed'
-        //     ], 400);
-        // }
+        $allowedTransitions = [
+            'PENDING' => ['CONFIRMED', 'CANCELLED'],
+            'CONFIRMED' => ['DELIVERED', 'CANCELLED'],
+            'DELIVERED' => [],
+            'CANCELLED' => [],
+        ];
+
+        if (! in_array($validated['status'], $allowedTransitions[$foundOrder->status] ?? [], true)) {
+            return response()->json(['message' => 'This order status transition is not allowed.'], 422);
+        }
         $foundOrder->update([
-            'status' => $request->status
+            'status' => $validated['status']
         ]);
 
         return response()->json([
             'message' => 'Updated successfully',
             'order' => $foundOrder
-        ], 201);
+        ]);
     }
     public function deleteOrder(Request $request)
     {
@@ -155,7 +191,10 @@ class OrderController extends Controller
                 'message' => 'Cannot delete order'
             ], 403);
         } else {
-            $deleteOrder->delete();
+            DB::transaction(function () use ($deleteOrder) {
+                OrderItem::where('order_id', $deleteOrder->id)->delete();
+                $deleteOrder->delete();
+            });
 
             return response()->json([
                 'message' => 'Order deleted successfully'

@@ -3,9 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use App\Models\Vendor;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
@@ -55,9 +53,14 @@ class AuthController extends Controller
 
     public function loginVendor(Request $request)
     {
-        $user = User::where('email', $request->email)->first();
+        $credentials = $request->validate([
+            'email' => 'required|email',
+            'password' => 'required|string',
+        ]);
 
-        if (!$user || !Hash::check($request->password, $user->password)) {
+        $user = User::where('email', $credentials['email'])->first();
+
+        if (!$user || !Hash::check($credentials['password'], $user->password)) {
 
             return response()->json([
                 'message' => 'Invalid credentials',
@@ -92,18 +95,10 @@ class AuthController extends Controller
 }
 
 public function updateUser(Request $request){
-    try{
-        $user=$request->user();
-
-        if(!$user){
-             return response()->json([
-            'message' => 'Unauthenticated'
-        ], 401);
-        }
-
+    $user=$request->user();
     $validated=$request->validate([
-        'profile_picture'=>'string|nullable',
-        'banner'=>'nullable|string'
+        'profile_picture'=>'nullable|url|max:2048',
+        'banner'=>'nullable|url|max:2048'
     ]);
     $user->update($validated);
 
@@ -111,21 +106,12 @@ public function updateUser(Request $request){
         'message'=>"User updated successfully",
         'data'=>$user
     ]);
-    }
-    catch(\Exception $e){
-        return response()->json([
-            "message"=>"Unable to update user",
-            'error'=>$e
-        ]);
-    };
-
-    
 }
 
 public function fetchUser(Request $request){
     $check=$request->user();
     if(!$check){
-        response()->json([
+        return response()->json([
             'message'=>"Unauthenticated"
             ],401);
     }
@@ -138,10 +124,4 @@ public function fetchUser(Request $request){
     ]);
 }
 
-public function fetchUsers(Request $request){
-    $user=User::get();
-    return $user;
-
-
-}
 }
