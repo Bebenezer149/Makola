@@ -7,8 +7,6 @@ use App\Models\User;
 // use App\Services\SupabaseStorageService;
 // use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
@@ -16,42 +14,22 @@ class ProductController extends Controller
    
     public function createProduct(Request $request)
     {
-        try {
+        $validated = $request->validate([
+            'product_name' => 'required|string|max:255',
+            'description' => 'required|string|max:65535',
+            'price' => 'required|decimal:0,2|min:0',
+            'quantity' => 'required|integer|min:0',
+            'img' => 'required|url|max:2048',
+            'status' => 'nullable|in:AVAILABLE,OUT_OF_STOCK,Available,Out_Of_Stock',
+        ]);
 
-            $validated = $request->validate([
-                'product_name' => 'required|string|max:255',
-                'description' => 'required|string|max:255',
-                'price' => 'required|numeric',
-                'quantity' => 'required|numeric',
-                'img' => 'required|url',
-                'status' => 'required|in:AVAILABLE,OUT_OF_STOCK,Available,Out_Of_Stock',
-            ]);
+        $validated['status'] = $validated['quantity'] === 0 ? 'OUT_OF_STOCK' : 'AVAILABLE';
+        $product = Product::create(['vendor_id' => $request->user()->id, ...$validated]);
 
-            Log::info('Validation passed');
-
-
-            $payload = array_merge(
-                ['vendor_id' => auth()->id()],
-                $validated
-            );
-            $product = Product::create($payload);
-
-            Log::info('Product created');
-
-            return response()->json([
-                'message' => 'Success',
-                'product' => $product
-            ]);
-        } catch (\Throwable $e) {
-
-            Log::error($e);
-
-            return response()->json([
-                'message' => $e->getMessage(),
-                'line' => $e->getLine(),
-                'file' => $e->getFile()
-            ], 500);
-        }
+        return response()->json([
+            'message' => 'Success',
+            'product' => $product
+        ], 201);
     }
     public function fetchProducts(Request $request)
     {
@@ -67,13 +45,9 @@ class ProductController extends Controller
     public function fetchOneProduct(Request $request)
     {
         $id = $request->input('id');
-        $foundProduct = Product::findOrFail($id)->first()->get();
-
-        if ($foundProduct->vendor_id !== auth()->id()) {
-            return response()->json([
-                'message' => 'Cannot access product'
-            ], 403);
-        }
+        $foundProduct = Product::where('id', $id)
+            ->where('vendor_id', $request->user()->id)
+            ->firstOrFail();
 
         return response()->json([
             'message' => 'Product retrieved successfully',
@@ -96,15 +70,17 @@ class ProductController extends Controller
         $validated = $request->validate([
             'product_name' => 'string|max:255',
             'description'  => 'string',
-            'price'        => 'numeric',
-            'quantity'     => 'numeric',
+            'price'        => 'decimal:0,2|min:0',
+            'quantity'     => 'integer|min:0',
             'status'       => 'in:AVAILABLE,OUT_OF_STOCK,Available,Out_Of_Stock',
             'img'          => 'url',
         ]);
 
       
 
-        if (isset($validated['status'])) {
+        if (array_key_exists('quantity', $validated)) {
+            $validated['status'] = $validated['quantity'] === 0 ? 'OUT_OF_STOCK' : 'AVAILABLE';
+        } elseif (isset($validated['status'])) {
             $validated['status'] = $this->normalizeProductStatus($validated['status']);
         }
 
@@ -148,7 +124,6 @@ class ProductController extends Controller
             'business_name'=>$vendor->business_name,
             'phone_number'=>$vendor->phone_number,
             'profile_picture'=>$vendor->profile_picture,
-            'email'=>$vendor->email
         ]);
     }
 

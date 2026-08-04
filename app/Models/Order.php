@@ -18,6 +18,11 @@ class Order extends Model
         'payment_method'
     ];
 
+    protected function casts(): array
+    {
+        return ['total_amount' => 'decimal:2'];
+    }
+
     public function vendor()
     {
         return $this->belongsTo(User::class, 'vendor_id');

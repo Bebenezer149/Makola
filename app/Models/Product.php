@@ -16,6 +16,11 @@ class Product extends Model
         'img',
         'status'
     ];
+
+    protected function casts(): array
+    {
+        return ['price' => 'decimal:2'];
+    }
     public function user(){
        return $this->belongsTo(User::class,'vendor_id');
     }

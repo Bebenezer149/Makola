@@ -16,6 +16,14 @@ class OrderItem extends Model
     ];
 
     protected $table='orderitems';
+
+    protected function casts(): array
+    {
+        return [
+            'unit_price' => 'decimal:2',
+            'subtotal' => 'decimal:2',
+        ];
+    }
     public function order(){
        return $this->belongsTo(Order::class, 'order_id');
     }
