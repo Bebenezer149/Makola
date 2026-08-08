@@ -22,7 +22,7 @@ Route::post('/login', [AuthController::class, 'loginVendor'])->middleware('throt
 
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/logout', [AuthController::class, 'logoutVendor'])->name('login');
+    Route::post('/logout', [AuthController::class, 'logoutVendor']);
     Route::put('update-profile', [AuthController::class, 'updateUser']);
     Route::get('/user', [AuthController::class, 'fetchUser']);
 });

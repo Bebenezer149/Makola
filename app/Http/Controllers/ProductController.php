@@ -123,6 +123,7 @@ class ProductController extends Controller
             'products' => $foundProduct,
             'business_name'=>$vendor->business_name,
             'phone_number'=>$vendor->phone_number,
+            'email'=>$vendor->email,
             'profile_picture'=>$vendor->profile_picture,
         ]);
     }
