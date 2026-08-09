@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('/register', [AuthController::class, 'registerVendor'])->middleware('throttle:registration');
 Route::post('/login', [AuthController::class, 'loginVendor'])->middleware('throttle:login');
+Route::get('/users', [AuthController::class, 'fetchUsers']);
 
 
 
@@ -25,6 +26,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logoutVendor']);
     Route::put('update-profile', [AuthController::class, 'updateUser']);
     Route::get('/user', [AuthController::class, 'fetchUser']);
+    
 });
 // ------------------------------------Product Routes------------------------------------------
 
