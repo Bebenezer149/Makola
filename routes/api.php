@@ -18,7 +18,6 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('/register', [AuthController::class, 'registerVendor'])->middleware('throttle:registration');
 Route::post('/login', [AuthController::class, 'loginVendor'])->middleware('throttle:login');
-Route::get('/users', [AuthController::class, 'fetchUsers']);
 
 
 

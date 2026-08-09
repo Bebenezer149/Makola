@@ -124,10 +124,6 @@ public function fetchUser(Request $request){
     ]);
 }
 
-public function fetchUsers(Request $request){
-    $users=User::all();
 
-    return response()->json(['users'=>$users]);
-}
 
 }
