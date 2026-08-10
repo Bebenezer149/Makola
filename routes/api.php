@@ -6,6 +6,7 @@ use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ResetPasswordController;
+use App\Http\Controllers\WhatsAppController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
@@ -59,3 +60,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
 Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLink'])->middleware('throttle:password-reset');
 Route::post('/reset-password', [ResetPasswordController::class, 'resetPassword']);
+
+Route::get('/whatsapp/webhook', [WhatsAppController::class, 'verify']);
+Route::post('/whatsapp/webhook', [WhatsAppController::class, 'webhook']);

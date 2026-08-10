@@ -39,5 +39,8 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
-
+   'whatsapp'=>[
+    'whatsapp_access_token'=>env('WHATSAPP_ACCESS_TOKEN'),
+    'whatsapp_verify_token'=>env('WHATSAPP_VERIFY_TOKEN')
+   ]
 ];

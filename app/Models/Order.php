@@ -15,7 +15,10 @@ class Order extends Model
         'additional_notes',
         'status',
         'total_amount',
-        'payment_method'
+        'payment_method',
+
+        
+
     ];
 
     protected function casts(): array
