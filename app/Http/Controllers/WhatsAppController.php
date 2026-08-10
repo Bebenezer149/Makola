@@ -9,9 +9,9 @@ class WhatsAppController extends Controller
 {
     //
     public function verify(Request $request){
-        $mode=$request->query('hub_mode');
-        $token=$request->query('hub_verify_token');
-        $challenge=$request->query('hub_challenge');
+        $mode=$request->query('hub.mode');
+        $token=$request->query('hub.verify_token');
+        $challenge=$request->query('hub.challenge');
 
         if($mode === "suscribe" && $token === config('services.whatsapp.whatsapp_verify_token')){
             return response($challenge,200);
