@@ -40,15 +40,28 @@ class WhatsAppController extends Controller
 
     public function sendMessage(WhatsAppService $whatsApp)
     {
-        $response = $whatsApp->sendMessage(
-            '233539278827',
-            'Hello From Blue Space Testing area'
-        );
+        try {
+            $response = $whatsApp->sendMessage(
+                '233539278827',
+                'Hello From Blue Space Testing area'
+            );
 
-        return response()->json([
-            'success' => $response->successful(),
-            'status' => $response->status(),
-            'response' => $response->json(),
-        ]);
+            // Throw an exception if the request was not successful
+            $response->throw();
+
+            return response()->json([
+                'success' => true,
+                'status' => $response->status(),
+                'response' => $response->json(),
+            ]);
+        } catch (\Illuminate\Http\Client\RequestException $e) {
+            // Catch specific Guzzle/HTTP client exceptions
+            Log::error('WhatsApp API request failed.', ['message' => $e->getMessage(), 'response_body' => $e->response->body()]);
+            return response()->json(['success' => false, 'message' => 'WhatsApp API request failed.', 'error' => $e->response->json()], $e->response->status());
+        } catch (\Exception $e) {
+            // Catch any other generic exceptions
+            Log::error('Failed to send WhatsApp message.', ['message' => $e->getMessage()]);
+            return response()->json(['success' => false, 'message' => 'An unexpected error occurred.'], 500);
+        }
     }
 }
