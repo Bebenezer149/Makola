@@ -12,10 +12,10 @@ class WhatsAppController extends Controller
 {
     return response()->json([
         'all' => $request->all(),
-        'mode' => $request->query('hub.mode'),
-        'token' => $request->query('hub.verify_token'),
-        'challenge' => $request->query('hub.challenge'),
-        'expected_token' => config('services.whatsapp.verify_token'),
+        'mode' => $request->query('hub_mode'),
+        'token' => $request->query('hub_verify_token'),
+        'challenge' => $request->query('hub_challenge'),
+        'expected_token' => config('services_whatsapp.verify_token'),
     ]);
 }
 
