@@ -15,7 +15,7 @@ class WhatsAppController extends Controller
         'mode' => $request->query('hub_mode'),
         'token' => $request->query('hub_verify_token'),
         'challenge' => $request->query('hub_challenge'),
-        'expected_token' => config('services_whatsapp.verify_token'),
+        'expected_token' => config('services.whatsapp.verify_token'),
     ]);
 }
 
