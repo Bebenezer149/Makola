@@ -41,6 +41,8 @@ return [
     ],
    'whatsapp'=>[
     'whatsapp_access_token'=>env('WHATSAPP_ACCESS_TOKEN'),
-    'whatsapp_verify_token'=>env('WHATSAPP_VERIFY_TOKEN')
+    'whatsapp_verify_token'=>env('WHATSAPP_VERIFY_TOKEN'),
+    'whatsapp_phone_number_id'=>env('WHATSAPP_PHONE_NUMBER_ID'),
+    
    ]
 ];
