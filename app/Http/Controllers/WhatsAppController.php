@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\WhatsAppService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -31,5 +32,15 @@ class WhatsAppController extends Controller
         return response()->json([
             'success' => true,
         ], 200);
+    }
+
+    public function sendMessage(WhatsAppService $whatsApp){
+        $response=$whatsApp->sendMessage('233539278827', "Hello From Blue Space Testing area");
+
+        return response()->json([
+            'success'=>$response->successful(),
+            'status'=>$response->status(),
+            'response'=>$response->json()
+        ]);
     }
 }
