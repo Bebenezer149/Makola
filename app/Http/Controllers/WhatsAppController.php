@@ -8,16 +8,21 @@ use Illuminate\Support\Facades\Log;
 class WhatsAppController extends Controller
 {
     //
-  public function verify(Request $request)
-{
-    return response()->json([
-        'all' => $request->all(),
-        'mode' => $request->query('hub_mode'),
-        'token' => $request->query('hub_verify_token'),
-        'challenge' => $request->query('hub_challenge'),
-        'expected_token' => config('services.whatsapp.verify_token'),
-    ]);
-}
+    public function verify(Request $request)
+    {
+        $mode = $request->query('hub_mode');
+        $token = $request->query('hub_verify_token');
+        $challenge = $request->query('hub_challenge');
+
+        if (
+            $mode === 'subscribe' &&
+            $token === config('services.whatsapp.verify_token')
+        ) {
+            return response($challenge, 200);
+        }
+
+        return response('Forbidden', 403);
+    }
 
     public function webhook(Request $request)
     {
