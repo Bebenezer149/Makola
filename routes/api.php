@@ -63,4 +63,4 @@ Route::post('/reset-password', [ResetPasswordController::class, 'resetPassword']
 
 Route::get('/whatsapp/webhook', [WhatsAppController::class, 'verify']);
 Route::post('/whatsapp/webhook', [WhatsAppController::class, 'webhook']);
-Route::get('/whatsapp/send-message', [WhatsAppController::class, 'sendMessage']);
+Route::get('/whatsapp/send-message', [WhatsAppController::class, 'sendTextMessage']);

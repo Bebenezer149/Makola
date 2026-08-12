@@ -38,7 +38,7 @@ class WhatsAppController extends Controller
         ], 200);
     }
 
-    public function sendMessage(WhatsAppService $whatsApp)
+    public function sendTextMessage(WhatsAppService $whatsApp)
     {
         try {
             $response = $whatsApp->sendMessage(
