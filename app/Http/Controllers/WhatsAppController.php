@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class WhatsAppController extends Controller
-{
+  {
     public function verify(Request $request)
     {
         $mode = $request->query('hub.mode');
