@@ -100,6 +100,8 @@ class OrderController extends Controller
             'message' => 'Order placed successfully',
             'order' => $order,
         ], 201);
+        $sms->sendMessage($vendor->phone_number, "You have a new order to attend to. Kindly visit your dashboard to review order");
+
     }
 
     public function fetchOrders(Request $request)
