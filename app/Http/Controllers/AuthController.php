@@ -126,8 +126,8 @@ public function fetchUser(Request $request){
 
 }
 
-public function getAll(){
-   $users= User::all();
+public function getAll(Request $request){
+   $users= User::all($request->all());
    return $users;
 }
 

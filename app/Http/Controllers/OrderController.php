@@ -68,7 +68,6 @@ class OrderController extends Controller
                 'status' => 'PENDING',
                 'total_amount' => 0,
             ]);
-            $sms->sendMessage($vendor->phone_number, "You have a new order to attend to. Kindly visit your dashboard to review order");
 
             $total = 0;
             foreach ($requestedQuantities as $productId => $quantity) {
