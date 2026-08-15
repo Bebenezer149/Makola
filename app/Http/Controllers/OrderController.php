@@ -92,12 +92,11 @@ class OrderController extends Controller
             return $order;
         }, 3);
 
-        // Move SMS logic here: after the transaction is successful and before the response is returned.
         try {
             $vendor = User::find($order->vendor_id);
             if ($vendor && $vendor->phone_number) {
                 $sms = app(MoolreService::class);
-                $sms->sendMessage($vendor->phone_number, "You have a new order to attend to. Kindly visit your dashboard to review order");
+                $sms->sendMessage($vendor->phone_number, "You have a new order from ".$order->customer_name."to attend to. Kindly visit your dashboard at https://blue-space-gh.vercel.app/login to review order ");
             }
         } catch (\Exception $e) {
             // Log the error but don't fail the request. The order was created successfully.
