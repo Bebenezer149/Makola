@@ -44,5 +44,15 @@ return [
     'verify_token'=>env('WHATSAPP_VERIFY_TOKEN'),
     'phone_number_id'=>env('WHATSAPP_PHONE_NUMBER_ID'),
     
+   ],
+   'smess'=>[
+    'api_key'=>env("SMESS_API_KEY"),
+    'smess_url'=>env("SMESS_URL")
+   ],
+   'moolre'=>[
+    'api_vaskey'=>env('MOOLRE_API_VASKEY'),
+    'api_url'=>env('MOOLRE_URL'),
+    'senderid'=>env('SENDER_ID')
+    
    ]
 ];
