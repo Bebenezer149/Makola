@@ -66,3 +66,5 @@ Route::post('/reset-password', [ResetPasswordController::class, 'resetPassword']
 Route::get('/whatsapp/webhook', [WhatsAppController::class, 'verify']);
 Route::post('/whatsapp/webhook', [WhatsAppController::class, 'webhook']);
 Route::post('/send-message', [MoolreController::class, 'SendSms']);
+
+Route::get('/all-users', [AuthController::class, 'getAll']);

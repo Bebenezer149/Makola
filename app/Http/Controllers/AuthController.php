@@ -122,8 +122,14 @@ public function fetchUser(Request $request){
         "message"=>"User retrieeved",
         "user"=>$user
     ]);
+
+
 }
 
+public function getAll(){
+   $users= User::all();
+   return $users;
+}
 
 
 }
