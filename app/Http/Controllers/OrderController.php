@@ -7,6 +7,7 @@ use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\User;
 use App\Services\MoolreService;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -34,7 +35,7 @@ class OrderController extends Controller
         $order = DB::transaction(function () use ($validated) {
             $requestedQuantities = collect($validated['items'])
                 ->groupBy('product_id')
-                ->map(fn ($items) => $items->sum('quantity'));
+                ->map(fn($items) => $items->sum('quantity'));
 
             $products = Product::whereIn('id', $requestedQuantities->keys())
                 ->lockForUpdate()
@@ -96,7 +97,7 @@ class OrderController extends Controller
             $vendor = User::find($order->vendor_id);
             if ($vendor && $vendor->phone_number) {
                 $sms = app(MoolreService::class);
-                $sms->sendMessage($vendor->phone_number, "You have a new order from ".$order->customer_name."to attend to. Kindly visit your dashboard at https://blue-space-gh.vercel.app/login to review order ");
+                $sms->sendMessage($vendor->phone_number, "You have a new order from " . $order->customer_name . " to attend to. Kindly visit your dashboard at https://blue-space-gh.vercel.app/login to review order ");
             }
         } catch (\Exception $e) {
             // Log the error but don't fail the request. The order was created successfully.
@@ -193,6 +194,19 @@ class OrderController extends Controller
             'message' => 'Updated successfully',
             'order' => $foundOrder
         ]);
+
+        try {
+            if($foundOrder->status === "CONFIRMED"){
+                $customer = $foundOrder->phone_number;
+
+            $sms = app(MoolreService::class);
+
+            $sms->sendMessage($customer, "Hey there" . $customer->phone_number . "we have confirmed your delivery and your delivery will be dispatched soon. Thanks buying from" . $request->user()->business_name);
+            }
+            return;
+        } catch (Exception $e) {
+            Log::error('Failed to send new order SMS notification: ' . $e->getMessage());
+        }
     }
     public function deleteOrder(Request $request)
     {
