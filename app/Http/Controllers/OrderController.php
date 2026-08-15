@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Services\MoolreService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class OrderController extends Controller
@@ -53,13 +54,9 @@ class OrderController extends Controller
                     throw ValidationException::withMessages(['items' => "Insufficient stock for {$products[$productId]->product_name}."]);
                 }
             }
-            $sms=app(MoolreService::class);
-            $vendorId=$products->first()->vendor_id;
-            $vendor=User::where('id',$vendorId);
-            
 
             $order = Order::create([
-                'vendor_id' => $vendorId,
+                'vendor_id' => $products->first()->vendor_id,
                 'customer_name' => $validated['customer_name'],
                 'phone_number' => $validated['phone_number'],
                 'delivery_to' => $validated['delivery_to'],
@@ -95,13 +92,22 @@ class OrderController extends Controller
             return $order;
         }, 3);
 
+        // Move SMS logic here: after the transaction is successful and before the response is returned.
+        try {
+            $vendor = User::find($order->vendor_id);
+            if ($vendor && $vendor->phone_number) {
+                $sms = app(MoolreService::class);
+                $sms->sendMessage($vendor->phone_number, "You have a new order to attend to. Kindly visit your dashboard to review order");
+            }
+        } catch (\Exception $e) {
+            // Log the error but don't fail the request. The order was created successfully.
+            Log::error('Failed to send new order SMS notification: ' . $e->getMessage());
+        }
 
         return response()->json([
             'message' => 'Order placed successfully',
             'order' => $order,
         ], 201);
-        $sms->sendMessage($vendor->phone_number, "You have a new order to attend to. Kindly visit your dashboard to review order");
-
     }
 
     public function fetchOrders(Request $request)
