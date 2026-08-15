@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
+use App\Models\User;
+use App\Services\MoolreService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -51,9 +53,13 @@ class OrderController extends Controller
                     throw ValidationException::withMessages(['items' => "Insufficient stock for {$products[$productId]->product_name}."]);
                 }
             }
+            $sms=app(MoolreService::class);
+            $vendorId=$products->first()->vendor_id;
+            $vendor=User::where('id',$vendorId);
+            
 
             $order = Order::create([
-                'vendor_id' => $products->first()->vendor_id,
+                'vendor_id' => $vendorId,
                 'customer_name' => $validated['customer_name'],
                 'phone_number' => $validated['phone_number'],
                 'delivery_to' => $validated['delivery_to'],
@@ -62,6 +68,7 @@ class OrderController extends Controller
                 'status' => 'PENDING',
                 'total_amount' => 0,
             ]);
+            $sms->sendMessage($vendor->phone_number, "You have a new order to attend to. Kindly visit your dashboard to review order");
 
             $total = 0;
             foreach ($requestedQuantities as $productId => $quantity) {
