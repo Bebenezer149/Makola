@@ -171,12 +171,7 @@ class OrderController extends Controller
         ]);
 
         $foundOrder = Order::where('vendor_id', $request->user()->id)->findOrFail($validated['id']);
-        if ($foundOrder->vendor_id !== auth()->id()) {
-            return response([
-                'message' => 'Cannot access order',
-            ], 403);
-        }
-        $allowedTransitions = [
+        $allowedTransitions = [ // Defines the state machine for order statuses
             'PENDING' => ['CONFIRMED', 'CANCELLED'],
             'CONFIRMED' => ['DELIVERED', 'CANCELLED'],
             'DELIVERED' => [],
@@ -186,27 +181,26 @@ class OrderController extends Controller
         if (! in_array($validated['status'], $allowedTransitions[$foundOrder->status] ?? [], true)) {
             return response()->json(['message' => 'This order status transition is not allowed.'], 422);
         }
-        $foundOrder->update([
-            'status' => $validated['status']
-        ]);
+
+        $foundOrder->update(['status' => $validated['status']]);
+
+        // Send SMS notification after status update
+        try {
+            if ($validated['status'] === "CONFIRMED") {
+                $customerPhoneNumber = $foundOrder->phone_number;
+                $vendorName = $request->user()->business_name;
+                $sms = app(MoolreService::class);
+                $sms->sendMessage($customerPhoneNumber, "Hey there, your order has been confirmed and will be dispatched soon. Thanks for buying from " . $vendorName);
+            }
+        } catch (Exception $e) {
+            // Log the error but don't fail the main request, as the status was updated successfully.
+            Log::error('Failed to send order confirmation SMS: ' . $e->getMessage());
+        }
 
         return response()->json([
             'message' => 'Updated successfully',
             'order' => $foundOrder
         ]);
-
-        try {
-            if($foundOrder->status === "CONFIRMED"){
-                $customer = $foundOrder->phone_number;
-
-            $sms = app(MoolreService::class);
-
-            $sms->sendMessage($customer, "Hey there" . $customer->phone_number . "we have confirmed your delivery and your delivery will be dispatched soon. Thanks buying from" . $request->user()->business_name);
-            }
-            return;
-        } catch (Exception $e) {
-            Log::error('Failed to send new order SMS notification: ' . $e->getMessage());
-        }
     }
     public function deleteOrder(Request $request)
     {
