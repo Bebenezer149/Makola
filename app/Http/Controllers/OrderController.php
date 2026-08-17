@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
+use Str;
 
 class OrderController extends Controller
 {
@@ -87,8 +88,8 @@ class OrderController extends Controller
                 ]);
                 $total += $subtotal;
             }
-
-            $order->update(['total_amount' => round($total, 2)]);
+            $token = Str::random(8);
+            $order->update(['total_amount' => round($total, 2), 'order_confirmation_token' => $token]);
 
             return $order;
         }, 3);
@@ -190,7 +191,7 @@ class OrderController extends Controller
                 $customerPhoneNumber = $foundOrder->phone_number;
                 $vendorName = $request->user()->business_name;
                 $sms = app(MoolreService::class);
-                $sms->sendMessage($customerPhoneNumber, "Hey there, your order has been confirmed and will be dispatched soon. Thanks for buying from " . $vendorName);
+                $sms->sendMessage($customerPhoneNumber, "Hey there, your order has been confirmed and will be dispatched soon. Let us know when it arrives here" . env("FRONTEND_URL") . "/confirm-order" . "/" . $foundOrder->token . " Thanks from buying from " . $vendorName);
             }
         } catch (Exception $e) {
             // Log the error but don't fail the main request, as the status was updated successfully.
@@ -220,6 +221,15 @@ class OrderController extends Controller
             return response()->json([
                 'message' => 'Order deleted successfully'
             ]);
+        }
+    }
+
+    public function getByToken(Request $request)
+    {
+        $token = $request->token;
+        $foundOrder = Order::where("order_confirmation_token", $token);
+        if (!$foundOrder) {
+            return response()->json(["message" => "Your Order Could not be found"], 404);
         }
     }
 }
