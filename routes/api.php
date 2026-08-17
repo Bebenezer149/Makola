@@ -68,3 +68,4 @@ Route::post('/whatsapp/webhook', [WhatsAppController::class, 'webhook']);
 Route::post('/send-message', [MoolreController::class, 'SendSms']);
 
 Route::get('/all-users', [AuthController::class, 'getAll']);
+Route::get("/confirm-order",[OrderController::class,'getByToken']);

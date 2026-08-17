@@ -16,6 +16,7 @@ class Order extends Model
         'status',
         'total_amount',
         'payment_method',
+        'order_confirmation_token'
 
         
 
