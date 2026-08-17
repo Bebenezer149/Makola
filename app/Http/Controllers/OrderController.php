@@ -191,7 +191,7 @@ class OrderController extends Controller
                 $customerPhoneNumber = $foundOrder->phone_number;
                 $vendorName = $request->user()->business_name;
                 $sms = app(MoolreService::class);
-                $sms->sendMessage($customerPhoneNumber, "Hey there, your order has been confirmed and will be dispatched soon. Let us know when it arrives here" . env("FRONTEND_URL") . "/confirm-order" . "/" . $foundOrder->token . " Thanks from buying from " . $vendorName);
+                $sms->sendMessage($customerPhoneNumber, "Hey there, your order has been confirmed and will be dispatched soon. Let us know when it arrives here " . env("FRONTEND_URL") . "/confirm-order" . "/".$foundOrder->order_confirmation_token . " Thanks from buying from " . $vendorName);
             }
         } catch (Exception $e) {
             // Log the error but don't fail the main request, as the status was updated successfully.
