@@ -231,5 +231,7 @@ class OrderController extends Controller
         if (!$foundOrder) {
             return response()->json(["message" => "Your Order Could not be found"], 404);
         }
+
+        return $foundOrder;
     }
 }
