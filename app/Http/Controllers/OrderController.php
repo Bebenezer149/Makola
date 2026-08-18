@@ -227,7 +227,7 @@ class OrderController extends Controller
     public function getByToken(Request $request)
     {
         $token = $request->token;
-        $foundOrder = Order::findOrFail("order_confirmation_token", $token);
+        $foundOrder = Order::where("order_confirmation_token", $token)->first();
         if (!$foundOrder) {
             return response()->json(["message" => "Your Order Could not be found"], 404);
         }
