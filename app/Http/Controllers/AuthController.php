@@ -119,7 +119,7 @@ public function fetchUser(Request $request){
     $user=User::find($check->id);
     
     return response()->json([
-        "message"=>"User retrieeved",
+        "message"=>"User retrieved",
         "user"=>$user
     ]);
 
@@ -128,7 +128,7 @@ public function fetchUser(Request $request){
 
 public function getAll(Request $request){
    $users= User::all($request->all());
-   return $users;
+   return response()->json($users);
 }
 
 
