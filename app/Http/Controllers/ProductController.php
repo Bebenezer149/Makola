@@ -125,6 +125,7 @@ class ProductController extends Controller
             'phone_number'=>$vendor->phone_number,
             'email'=>$vendor->email,
             'profile_picture'=>$vendor->profile_picture,
+            'banner'=>$vendor->banner
         ]);
     }
 
