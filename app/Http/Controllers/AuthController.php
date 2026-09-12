@@ -95,18 +95,37 @@ class AuthController extends Controller
 }
 
 public function updateUser(Request $request){
-    $user=$request->user();
-    $validated=$request->validate([
-        'profile_picture'=>'nullable|url|max:2048',
-        'banner'=>'nullable|url|max:2048'
-    ]);
-    $user->update($validated);
+        $user=$request->user();
+        $validated=$request->validate([
+            'first_name'=>'nullable|string|max:255',
+            'last_name'=>'nullable|string|max:255',
+            'business_name'=>'nullable|string|max:255',
+            'profile_picture'=>'nullable|url|max:2048',
+            'banner'=>'nullable|url|max:2048',
+            'phone_number'=>'nullable|string|max:20|unique:users,phone_number,'.$user->id,
+            'email'=>'nullable|email|max:255|unique:users,email,'.$user->id
+        ]);
 
-    return response()->json([
-        'message'=>"User updated successfully",
-        'data'=>$user
-    ]);
-}
+        // Handle business_name update to regenerate link
+        if(isset($validated['business_name']) && $validated['business_name'] !== $user->business_name){
+            $link = Str::slug($validated['business_name']);
+            $count = 1;
+            $originalLink = $link;
+
+            while(User::where('link',$link )->where('id','<>',$user->id)->exists()){
+                $link=$originalLink.'-'.$count;
+                $count++;
+            }
+            $validated['link'] = $link;
+        }
+
+        $user->update($validated);
+
+        return response()->json([
+            'message'=>"User updated successfully",
+            'data'=>$user
+        ]);
+    }
 
 public function fetchUser(Request $request){
     $check=$request->user();
