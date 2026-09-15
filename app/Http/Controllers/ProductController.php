@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 class ProductController extends Controller
 {
     //
-   
+
     public function createProduct(Request $request)
     {
         $validated = $request->validate([
@@ -20,6 +20,8 @@ class ProductController extends Controller
             'price' => 'required|decimal:0,2|min:0',
             'quantity' => 'required|integer|min:0',
             'img' => 'required|url|max:2048',
+            'category' => 'nullable|in:Food&Drinks,Electronics, Housing&Furniture,Books&Stationery, Jewelries&Accessories, Fitness&Sports, Others',
+
             'status' => 'nullable|in:AVAILABLE,OUT_OF_STOCK,Available,Out_Of_Stock',
         ]);
 
@@ -70,13 +72,14 @@ class ProductController extends Controller
         $validated = $request->validate([
             'product_name' => 'string|max:255',
             'description'  => 'string',
+            'category' => 'nullable|in:Food&Drinks,Electronics, Housing&Furniture,Books&Stationery, Jewelries&Accessories, Fitness&Sports, Others',
             'price'        => 'decimal:0,2|min:0',
             'quantity'     => 'integer|min:0',
             'status'       => 'in:AVAILABLE,OUT_OF_STOCK,Available,Out_Of_Stock',
             'img'          => 'url',
         ]);
 
-      
+
 
         if (array_key_exists('quantity', $validated)) {
             $validated['status'] = $validated['quantity'] === 0 ? 'OUT_OF_STOCK' : 'AVAILABLE';
@@ -121,11 +124,11 @@ class ProductController extends Controller
         return response()->json([
             'message' => 'products retrieved successfully',
             'products' => $foundProduct,
-            'business_name'=>$vendor->business_name,
-            'phone_number'=>$vendor->phone_number,
-            'email'=>$vendor->email,
-            'profile_picture'=>$vendor->profile_picture,
-            'banner'=>$vendor->banner
+            'business_name' => $vendor->business_name,
+            'phone_number' => $vendor->phone_number,
+            'email' => $vendor->email,
+            'profile_picture' => $vendor->profile_picture,
+            'banner' => $vendor->banner
         ]);
     }
 

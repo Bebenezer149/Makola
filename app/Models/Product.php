@@ -11,6 +11,7 @@ class Product extends Model
         'vendor_id',
         'product_name',
         'description',
+        'category',
         'price',
         'quantity',
         'img',
