@@ -20,8 +20,8 @@ class ProductController extends Controller
             'price' => 'required|decimal:0,2|min:0',
             'quantity' => 'required|integer|min:0',
             'img' => 'required|url|max:2048',
-            'variants'=>'required|array|max:5',
-            'variant.*'=>'required|url',
+            'variants' => 'required|array|max:5',
+            'variant.*' => 'required|url',
             'category' => 'nullable|in:Food&Drinks,Electronics, Housing&Furniture,Books&Stationery, Jewelries&Accessories, Fitness&Sports, Others',
 
             'status' => 'nullable|in:AVAILABLE,OUT_OF_STOCK,Available,Out_Of_Stock',
@@ -77,6 +77,8 @@ class ProductController extends Controller
             'category' => 'nullable|in:Food&Drinks,Electronics, Housing&Furniture,Books&Stationery, Jewelries&Accessories, Fitness&Sports, Others',
             'price'        => 'decimal:0,2|min:0',
             'quantity'     => 'integer|min:0',
+            'variants' => 'required|array|max:5',
+            'variants.*' => 'required|url',
             'status'       => 'in:AVAILABLE,OUT_OF_STOCK,Available,Out_Of_Stock',
             'img'          => 'url',
         ]);
