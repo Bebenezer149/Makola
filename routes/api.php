@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ForgotPasswordController;
+use App\Http\Controllers\MarketplaceController;
 use App\Http\Controllers\MoolreController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
@@ -69,3 +70,8 @@ Route::post('/send-message', [MoolreController::class, 'SendSms']);
 
 Route::get('/all-users', [AuthController::class, 'getAll']);
 Route::get("/confirm-order",[OrderController::class,'getByToken']);
+
+// -------------MArketplace-------------------------------------
+
+Route::get('/market-products',[MarketplaceController::class,'fetchProductsForShelf' ]);
+Route::get('/market-sellers',[MarketplaceController::class, 'fetchSellersForMarket']);
