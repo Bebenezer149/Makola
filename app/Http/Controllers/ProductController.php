@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\Product_image;
 use App\Models\User;
 // use App\Services\SupabaseStorageService;
 // use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
@@ -37,7 +38,7 @@ class ProductController extends Controller
     }
     public function fetchProducts(Request $request)
     {
-        $foundProducts = Product::where('vendor_id', auth()->id())->get();
+        $foundProducts = Product::where('vendor_id', auth()->id())->with('images')->get();
         return response()->json(
             [
                 'message' => 'Products Retrieved Successfully',
