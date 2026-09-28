@@ -6,6 +6,7 @@ use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\MarketplaceController;
 use App\Http\Controllers\MoolreController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\OtpController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ResetPasswordController;
 use App\Http\Controllers\smessController;
@@ -67,6 +68,8 @@ Route::post('/reset-password', [ResetPasswordController::class, 'resetPassword']
 Route::get('/whatsapp/webhook', [WhatsAppController::class, 'verify']);
 Route::post('/whatsapp/webhook', [WhatsAppController::class, 'webhook']);
 Route::post('/send-message', [MoolreController::class, 'SendSms']);
+Route::post('/send-otp',[OtpController::class, 'sendOtp']);
+Route::post('/verify-otp',[OtpController::class, 'verifyOTP']);
 
 Route::get('/all-users', [AuthController::class, 'getAll']);
 Route::get("/confirm-order",[OrderController::class,'getByToken']);
