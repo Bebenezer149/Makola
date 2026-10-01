@@ -54,5 +54,8 @@ return [
     'api_url'=>env('MOOLRE_URL'),
     'senderid'=>env('SENDER_ID')
     
-   ]
+   ],
+   'moolre-pay'=>[
+    'api-username'=>env('X-API-USER'),
+   ],
 ];

@@ -3,88 +3,86 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
-use App\Models\Product_image;
 use App\Models\User;
-// use App\Services\SupabaseStorageService;
-// use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
-    //
-
     public function createProduct(Request $request)
     {
         $validated = $request->validate([
-            'product_name' => 'required|string|max:255',
-            'description' => 'required|string|max:65535',
-            'price' => 'required|decimal:0,2|min:0',
-            'quantity' => 'required|integer|min:0',
-            'img' => 'required|url|max:2048',
-            'images' => 'nullable|array|max:5',
-            'images.*' => 'required|url',
-            'category' => 'nullable|in:Food&Drinks,Electronics, Housing&Furniture,Books&Stationery, Jewelries&Accessories, Fitness&Sports, Others',
-
-            'status' => 'nullable|in:AVAILABLE,OUT_OF_STOCK,Available,Out_Of_Stock',
+            'product_name' => ['required', 'string', 'max:255'],
+            'description' => ['required', 'string', 'max:65535'],
+            'price' => ['required', 'numeric', 'min:0'],
+            'quantity' => ['required', 'integer', 'min:0'],
+            'img' => ['required', 'url', 'max:2048'],
+            'images' => ['nullable', 'array', 'max:5'],
+            'images.*' => ['nullable', 'url'],
+            'category' => ['nullable', 'string', 'max:255'],
+            'status' => ['nullable', 'string'],
         ]);
 
-        $validated['status'] = $validated['quantity'] === 0 ? 'OUT_OF_STOCK' : 'AVAILABLE';
-        $product = Product::create(['vendor_id' => $request->user()->id, ...$validated]);
+        $validated['status'] = ($validated['quantity'] ?? 0) === 0 ? 'OUT_OF_STOCK' : 'AVAILABLE';
+
+        $product = Product::create([
+            'vendor_id' => $request->user()->id,
+            ...$validated,
+        ]);
 
         return response()->json([
             'message' => 'Success',
-            'product' => $product
+            'product' => $product,
         ], 201);
     }
+
     public function fetchProducts(Request $request)
     {
-        $foundProducts = Product::where('vendor_id', auth()->id())->with('images')->get();
-        return response()->json(
-            [
-                'message' => 'Products Retrieved Successfully',
-                'products' => $foundProducts
-            ]
-        );
+        $foundProducts = Product::where('vendor_id', auth()->id())
+            ->with('images')
+            ->get();
+
+        return response()->json([
+            'message' => 'Products Retrieved Successfully',
+            'products' => $foundProducts,
+        ]);
     }
 
     public function fetchOneProduct(Request $request)
     {
         $id = $request->input('id');
+
         $foundProduct = Product::where('id', $id)
             ->where('vendor_id', $request->user()->id)
             ->firstOrFail();
 
         return response()->json([
             'message' => 'Product retrieved successfully',
-            'product' => $foundProduct
+            'product' => $foundProduct,
         ]);
     }
 
     public function updateProduct(Request $request)
     {
         $id = $request->input('id');
-
         $product = Product::findOrFail($id);
 
-        if ($product->vendor_id !== auth()->id()) {
+        if ((int) $product->vendor_id !== (int) $request->user()->id) {
             return response()->json([
                 'message' => 'Cannot update product',
             ], 403);
         }
 
         $validated = $request->validate([
-            'product_name' => 'string|max:255',
-            'description'  => 'string',
-            'category' => 'nullable|in:Food&Drinks,Electronics, Housing&Furniture,Books&Stationery, Jewelries&Accessories, Fitness&Sports, Others',
-            'price'        => 'decimal:0,2|min:0',
-            'quantity'     => 'integer|min:0',
-            'variants' => 'required|array|max:5',
-            'variants.*' => 'required|url',
-            'status'       => 'in:AVAILABLE,OUT_OF_STOCK,Available,Out_Of_Stock',
-            'img'          => 'url',
+            'product_name' => ['sometimes', 'string', 'max:255'],
+            'description' => ['sometimes', 'string', 'max:65535'],
+            'category' => ['nullable', 'string', 'max:255'],
+            'price' => ['sometimes', 'numeric', 'min:0'],
+            'quantity' => ['sometimes', 'integer', 'min:0'],
+            'img' => ['sometimes', 'nullable', 'url', 'max:2048'],
+            'images' => ['nullable', 'array', 'max:5'],
+            'images.*' => ['nullable', 'url'],
+            'status' => ['sometimes', 'string'],
         ]);
-
-
 
         if (array_key_exists('quantity', $validated)) {
             $validated['status'] = $validated['quantity'] === 0 ? 'OUT_OF_STOCK' : 'AVAILABLE';
@@ -96,8 +94,8 @@ class ProductController extends Controller
 
         return response()->json([
             'message' => 'Product updated successfully',
-            'product' => $product
-        ]);
+            'product' => $product,
+        ], 200);
     }
 
     public function deleteProduct(Request $request)
@@ -105,22 +103,22 @@ class ProductController extends Controller
         $id = $request->input('id');
         $foundProduct = Product::findOrFail($id);
 
-        if ($foundProduct->vendor_id !== auth()->id()) {
+        if ((int) $foundProduct->vendor_id !== (int) auth()->id()) {
             return response()->json([
-                'message' => 'Cannot delete Product'
+                'message' => 'Cannot delete Product',
             ], 403);
-        } else {
-            $foundProduct->delete();
-
-            return response()->json([
-                'message' => 'Product deleted successfully'
-            ], 201);
         }
+
+        $foundProduct->delete();
+
+        return response()->json([
+            'message' => 'Product deleted successfully',
+        ], 200);
     }
 
-    public function showStore(Request $request,)
+    public function showStore(Request $request)
     {
-        $link = $request->link;
+        $link = $request->query('link');
 
         $vendor = User::where('link', $link)->firstOrFail();
 
@@ -133,16 +131,18 @@ class ProductController extends Controller
             'phone_number' => $vendor->phone_number,
             'email' => $vendor->email,
             'profile_picture' => $vendor->profile_picture,
-            'banner' => $vendor->banner
+            'banner' => $vendor->banner,
         ]);
     }
 
     private function normalizeProductStatus(string $status): string
     {
-        return match (strtoupper(str_replace(' ', '_', $status))) {
+        $normalized = strtoupper(str_replace([' ', '-'], '_', trim($status)));
+
+        return match ($normalized) {
             'AVAILABLE' => 'AVAILABLE',
             'OUT_OF_STOCK' => 'OUT_OF_STOCK',
-            default => $status,
+            default => 'AVAILABLE',
         };
     }
 }

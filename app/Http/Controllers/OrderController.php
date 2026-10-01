@@ -7,6 +7,7 @@ use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\User;
 use App\Services\MoolreService;
+use App\Services\PaymentService;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -88,11 +89,18 @@ class OrderController extends Controller
                 ]);
                 $total += $subtotal;
             }
+
+            
+
+
             $token = Str::random(8);
             $order->update(['total_amount' => round($total, 2), 'order_confirmation_token' => $token]);
 
             return $order;
         }, 3);
+
+        $pay=app(PaymentService::class);
+        $paymentResponse=$pay->createPayment($order->id, $order->total_amount);
 
         try {
             $vendor = User::find($order->vendor_id);
@@ -108,6 +116,7 @@ class OrderController extends Controller
         return response()->json([
             'message' => 'Order placed successfully',
             'order' => $order,
+            'payment_data'=>$paymentResponse
         ], 201);
     }
 
