@@ -7,6 +7,7 @@ use App\Http\Controllers\MarketplaceController;
 use App\Http\Controllers\MoolreController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\OtpController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ResetPasswordController;
 use App\Http\Controllers\smessController;
@@ -78,3 +79,7 @@ Route::get("/confirm-order",[OrderController::class,'getByToken']);
 
 Route::get('/market-products',[MarketplaceController::class,'fetchProductsForShelf' ]);
 Route::get('/market-sellers',[MarketplaceController::class, 'fetchSellersForMarket']);
+
+//-------------------------- Payment API-----------------------------------------
+
+Route::post('/make-payment',[PaymentController::class, 'start']);
