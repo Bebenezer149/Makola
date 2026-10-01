@@ -37,9 +37,7 @@ class ProductController extends Controller
 
     public function fetchProducts(Request $request)
     {
-        $foundProducts = Product::where('vendor_id', auth()->id())
-            ->with('images')
-            ->get();
+        $foundProducts = Product::where('vendor_id', auth()->id())->get();
 
         return response()->json([
             'message' => 'Products Retrieved Successfully',
