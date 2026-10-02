@@ -116,7 +116,7 @@ class OrderController extends Controller
         return response()->json([
             'message' => 'Order placed successfully',
             'order' => $order,
-            'payment_data'=>$paymentResponse->original->moolre_response->data->authorization_url
+            'payment_data'=>$paymentResponse->original->moolre_response
         ], 201);
     }
 
