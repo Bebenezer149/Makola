@@ -116,7 +116,7 @@ class OrderController extends Controller
         return response()->json([
             'message' => 'Order placed successfully',
             'order' => $order,
-            'authorization_url' => $paymentResponse->json('data.authorization_url'),
+            'authorization_url' => $paymentResponse->json(),
         ], 201);
     }
 
