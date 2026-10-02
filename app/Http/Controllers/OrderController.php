@@ -90,7 +90,7 @@ class OrderController extends Controller
                 $total += $subtotal;
             }
 
-
+            
 
 
             $token = Str::random(8);
@@ -99,8 +99,8 @@ class OrderController extends Controller
             return $order;
         }, 3);
 
-        $pay = app(PaymentService::class);
-        $paymentResponse = $pay->createPayment($order->id, $order->total_amount);
+        $pay=app(PaymentService::class);
+        $paymentResponse=$pay->createPayment($order->id, $order->total_amount);
 
         try {
             $vendor = User::find($order->vendor_id);
@@ -116,7 +116,7 @@ class OrderController extends Controller
         return response()->json([
             'message' => 'Order placed successfully',
             'order' => $order,
-            'authorization_url' => $paymentResponse->json(),
+            'payment_data'=>$paymentResponse
         ], 201);
     }
 
@@ -200,7 +200,7 @@ class OrderController extends Controller
                 $customerPhoneNumber = $foundOrder->phone_number;
                 $vendorName = $request->user()->business_name;
                 $sms = app(MoolreService::class);
-                $sms->sendMessage($customerPhoneNumber, "Hey there, your order has been confirmed and will be dispatched soon. Let us know when it arrives here " . env("FRONTEND_URL") . "/confirm-order" . "/" . $foundOrder->order_confirmation_token . " Thanks for buying from " . $vendorName);
+                $sms->sendMessage($customerPhoneNumber, "Hey there, your order has been confirmed and will be dispatched soon. Let us know when it arrives here " . env("FRONTEND_URL") . "/confirm-order" . "/".$foundOrder->order_confirmation_token . " Thanks for buying from " . $vendorName);
             }
         } catch (Exception $e) {
             // Log the error but don't fail the main request, as the status was updated successfully.
@@ -241,6 +241,6 @@ class OrderController extends Controller
             return response()->json(["message" => "Your Order Could not be found"], 404);
         }
 
-        return response()->json(["order" => $foundOrder]);
+        return response()->json(["order"=>$foundOrder]);
     }
 }
