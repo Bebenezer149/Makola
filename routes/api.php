@@ -84,4 +84,4 @@ Route::get('/market-sellers',[MarketplaceController::class, 'fetchSellersForMark
 
 Route::post('/make-payment',[PaymentController::class, 'start']);
 Route::post('/moolre/callback', [PaymentController::class, 'receiveCallback']);
-Route::get('/moolre/latest',[PaymentController::class, 'receiveCallback']);
+Route::get('/moolre/latest',[PaymentController::class, 'checkStatus']);

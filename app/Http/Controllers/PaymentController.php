@@ -15,12 +15,24 @@ class PaymentController extends Controller
         return $data;
     }
     
-     public function receiveCallback(Request $request){
-        $data=$request->all();
+    //  public function receiveCallback(Request $request){
+    //     $data=$request->all();
+    //     $status=$request['original.message'];
+    //     return response()->json([
 
-        return response()->json([
-            'status'=>'Success',
-            'data'=>$data
+    //         'status'=>"Success",
+    //         'data'=>$data
+    //     ]);
+    // }
+    public function checkStatus(Request $request){
+        $validated = $request->validate([
+            'reference' => ['required', 'string'],
         ]);
+
+        $checker=app(PaymentService::class);
+        $data=$checker->checkStatus($validated['reference']);
+        
+
+        return $data;
     }
 }

@@ -11,7 +11,7 @@ class Payment extends Model
         'order_id',
         'amount',
         'reference',
-        'status'
+        'payment_status'
     ];
 
     public function orders(){
