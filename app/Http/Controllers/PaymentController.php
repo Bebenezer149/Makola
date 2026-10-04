@@ -14,4 +14,13 @@ class PaymentController extends Controller
         $data=$pay->createPayment($request->order,$request->amount);
         return $data;
     }
+    
+     public function receiveCallback(Request $request){
+        $data=$request->all();
+
+        return response()->json([
+            'status'=>'Success',
+            'data'=>$data
+        ]);
+    }
 }

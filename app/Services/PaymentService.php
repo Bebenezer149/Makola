@@ -23,6 +23,7 @@ class PaymentService
                 'accountnumber' => env('ACCOUNTNUMBER'),
                 'email' => env('MOOLRE_EMAIL'),
                 'externalref' => $reference,
+                'callback'=>'https://makola-pzk5.onrender.com/api/moolre/callback',
                 'reusable' => '0',
             ]
         );
@@ -33,4 +34,8 @@ class PaymentService
             'reference' => $reference,
         ]);
     }
+
+    // ------ Defining our callback
+
+   
 }
