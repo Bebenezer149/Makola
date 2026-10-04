@@ -30,6 +30,7 @@ class PaymentService
                 'email' => env('MOOLRE_EMAIL'),
                 'externalref' => $reference,
                 'callback' => 'https://makola-pzk5.onrender.com/api/moolre/callback',
+                'redirect'=>env('FRONTEND_URL').'/success',
                 'reusable' => '0',
             ]
         );
