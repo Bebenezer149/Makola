@@ -8,6 +8,7 @@ use App\Http\Controllers\MoolreController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\OtpController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\PayoutController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ResetPasswordController;
 use App\Http\Controllers\smessController;
@@ -85,3 +86,8 @@ Route::get('/market-sellers',[MarketplaceController::class, 'fetchSellersForMark
 Route::post('/make-payment',[PaymentController::class, 'start']);
 Route::post('/moolre/callback', [PaymentController::class, 'receiveCallback']);
 Route::get('/moolre/latest',[PaymentController::class, 'checkStatus']);
+
+// ----------------- Payout API----------------------------
+
+Route::post("/verify-name",[PayoutController::class, 'verifyName']);
+Route::post("/transfer",[PayoutController::class,'initiateTransfer']);

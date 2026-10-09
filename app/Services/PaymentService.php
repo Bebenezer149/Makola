@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Order;
 use App\Models\Payment;
+use App\Models\Payout;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
@@ -30,7 +31,7 @@ class PaymentService
                 'email' => env('MOOLRE_EMAIL'),
                 'externalref' => $reference,
                 'callback' => 'https://makola-pzk5.onrender.com/api/moolre/callback',
-                'redirect'=>env('FRONTEND_URL').'/success',
+                'redirect' => env('FRONTEND_URL') . '/success',
                 'reusable' => '0',
             ]
         );
@@ -105,8 +106,8 @@ class PaymentService
             return response()->json([
                 'message' => $feedback->json(),
                 'payment_status' => 'PAID',
-                'order'=>$order,
-                'redirect'=>"/success"
+                'order' => $order,
+                'redirect' => "/success"
             ]);
         }
 
@@ -116,7 +117,7 @@ class PaymentService
             return response()->json([
                 'message' => 'Payment failed',
                 'payment_status' => 'FAILED',
-                'redirect'=>"/failed",
+                'redirect' => "/failed",
             ]);
         }
         if (in_array($status, [0, '0'], true)) {
@@ -125,8 +126,8 @@ class PaymentService
             return response()->json([
                 'message' => 'Payment pending',
                 'payment_status' => $payment->payment_status,
-                 'redirect'=>"/pending",
-                
+                'redirect' => "/pending",
+
             ]);
         }
         return response()->json([
@@ -135,30 +136,58 @@ class PaymentService
         ]);
     }
 
-    // public function verifyPayment(string $reference)
-    // {
-    //     $payment = Payment::where('reference', $reference)->first();
-    //     $order = Order::where('id', $payment->order_id)->first();
+    public function verifyName(string $receiver, string $channel)
+    {
+        $response = Http::withHeaders([
+            'X-API-USER' => "bluespace0fficial"
+        ])->post("https://sandbox.moolre.com/open/transact/validate", [
+            'type' => "1",
+            "receiver" => $receiver,
+            "channel" => $channel,
+            "currency" => "GHS",
+            "accountnumber" => env('ACCOUNTNUMBER')
+        ]);
 
-    //     if ($payment->status === "PAID") {
-    //         return response()->json([
-    //             'message' => "Payment is already completed",
-    //             "status" => $payment->status
-    //         ], 200);
-    //     } elseif ($payment->status === "DISPUTED") {
-    //         return response()->json([
-    //             'message' => "Payment Flagged for investigation",
-    //             'status' => $payment->status
-    //         ], 200);
-    //     } elseif ($payment->status === "REFUNDED") {
-    //         return response()->json([
-    //             'message' => "Money has been refunded",
-    //             'status' => $payment->status
-    //         ], 200);
-    //     } else {
-    //         $order->update([
-    //             'status' => "PENDING"
-    //         ]);
-    //     }
-    // }
+        if (!$response->successful()) {
+            return response()->json([
+                'message' => 'The receiver could not be verified.',
+                'data' => $response->json(),
+            ], 502);
+        }
+
+        return response()->json([
+            "message" => "Receiver found",
+            "data" => $response->json()
+        ]);
+    }
+
+    public function initiateTransfer(
+        int $amount,
+        string $channel,
+        string $receiver,
+        
+    ) {
+        $reference = 'BS-' . strtoupper(Str::random(12));
+
+
+        $response = Http::withHeaders([
+            'X-API-USER' => "bluespace0fficial"
+        ])->post("https://sandbox.moolre.com/open/transact/transfer", [
+            'type' => "1",
+            "receiver" => $receiver,
+            'amount' => $amount,
+            "channel" => $channel,
+            'externalref' => $reference,
+            "currency" => "GHS",
+            "accountnumber" => env('ACCOUNTNUMBER'),
+            "status" => "pending"
+        ]);
+
+
+        return response()->json([
+            'message' => 'Transfer accepted and recorded as pending.',
+            'data' => $response->json(),
+
+        ], 202);
+    }
 }

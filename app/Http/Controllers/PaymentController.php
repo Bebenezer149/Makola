@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use App\Models\Payment;
+use App\Models\User;
+use App\Services\MoolreService;
 use App\Services\PaymentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -49,6 +51,11 @@ class PaymentController extends Controller
         if ((int) $status === 1) {
             $payment->update(['payment_status' => 'PAID']);
             $order->update(['status' => 'PENDING']);
+            $vendor = User::find($order->vendor_id);
+            if ($vendor) {
+                $sms = app(MoolreService::class);
+                $sms->sendMessage($vendor->phone_number, "You have a new order from " . $order->customer_name . " to attend to. Kindly visit your dashboard at https://blue-space-gh.vercel.app/login to review order ");
+            }
 
             return response()->json([
                 'message' => 'Payment and order updated successfully',
