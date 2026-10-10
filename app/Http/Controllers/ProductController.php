@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ProductController extends Controller
 {
@@ -16,18 +17,31 @@ class ProductController extends Controller
             'price' => ['required', 'numeric', 'min:0'],
             'quantity' => ['required', 'integer', 'min:0'],
             'img' => ['required', 'url', 'max:2048'],
-            'images' => ['nullable', 'array', 'max:5'],
-            'images.*' => ['nullable', 'url'],
+            'images' => ['nullable', 'array', 'max:6'],
+            'images.*' => ['required', 'url', 'max:2048'],
             'category' => ['nullable', 'string', 'max:255'],
             'status' => ['nullable', 'string'],
         ]);
 
-        $validated['status'] = ($validated['quantity'] ?? 0) === 0 ? 'OUT_OF_STOCK' : 'AVAILABLE';
+        $validated['status'] = (int) ($validated['quantity'] ?? 0) === 0 ? 'OUT_OF_STOCK' : 'AVAILABLE';
 
-        $product = Product::create([
-            'vendor_id' => $request->user()->id,
-            ...$validated,
-        ]);
+        $imageUrls = $validated['images'] ?? [];
+        unset($validated['images']);
+
+        $product = DB::transaction(function () use ($request, $validated, $imageUrls) {
+            $product = Product::create([
+                'vendor_id' => $request->user()->id,
+                ...$validated,
+            ]);
+
+            if ($imageUrls !== []) {
+                $product->product_image()->createMany(
+                    array_map(fn (string $url) => ['secondary_url' => $url], $imageUrls)
+                );
+            }
+
+            return $product->load('product_image');
+        });
 
         return response()->json([
             'message' => 'Success',
@@ -37,7 +51,9 @@ class ProductController extends Controller
 
     public function fetchProducts(Request $request)
     {
-        $foundProducts = Product::where('vendor_id', auth()->id())->get();
+        $foundProducts = Product::with('product_image')
+            ->where('vendor_id', auth()->id())
+            ->get();
 
         return response()->json([
             'message' => 'Products Retrieved Successfully',
@@ -51,6 +67,7 @@ class ProductController extends Controller
 
         $foundProduct = Product::where('id', $id)
             ->where('vendor_id', $request->user()->id)
+            ->with('product_image')
             ->firstOrFail();
 
         return response()->json([
@@ -77,18 +94,36 @@ class ProductController extends Controller
             'price' => ['sometimes', 'numeric', 'min:0'],
             'quantity' => ['sometimes', 'integer', 'min:0'],
             'img' => ['sometimes', 'nullable', 'url', 'max:2048'],
-            'images' => ['nullable', 'array', 'max:5'],
-            'images.*' => ['nullable', 'url'],
+            'images' => ['nullable', 'array', 'max:6'],
+            'images.*' => ['required', 'url', 'max:2048'],
             'status' => ['sometimes', 'string'],
         ]);
 
         if (array_key_exists('quantity', $validated)) {
-            $validated['status'] = $validated['quantity'] === 0 ? 'OUT_OF_STOCK' : 'AVAILABLE';
+            $validated['status'] = (int) $validated['quantity'] === 0 ? 'OUT_OF_STOCK' : 'AVAILABLE';
         } elseif (isset($validated['status'])) {
             $validated['status'] = $this->normalizeProductStatus($validated['status']);
         }
 
-        $product->update($validated);
+        $hasImages = $request->boolean('images_present') || array_key_exists('images', $validated);
+        $imageUrls = $validated['images'] ?? [];
+        unset($validated['images']);
+
+        $product = DB::transaction(function () use ($product, $validated, $hasImages, $imageUrls) {
+            $product->update($validated);
+
+            if ($hasImages) {
+                $product->product_image()->delete();
+
+                if ($imageUrls !== []) {
+                    $product->product_image()->createMany(
+                        array_map(fn (string $url) => ['secondary_url' => $url], $imageUrls)
+                    );
+                }
+            }
+
+            return $product->load('product_image');
+        });
 
         return response()->json([
             'message' => 'Product updated successfully',
@@ -107,7 +142,10 @@ class ProductController extends Controller
             ], 403);
         }
 
-        $foundProduct->delete();
+        DB::transaction(function () use ($foundProduct) {
+            $foundProduct->product_image()->delete();
+            $foundProduct->delete();
+        });
 
         return response()->json([
             'message' => 'Product deleted successfully',
@@ -120,7 +158,9 @@ class ProductController extends Controller
 
         $vendor = User::where('link', $link)->firstOrFail();
 
-        $foundProduct = Product::where('vendor_id', $vendor->id)->get();
+        $foundProduct = Product::with('product_image')
+            ->where('vendor_id', $vendor->id)
+            ->get();
 
         return response()->json([
             'message' => 'products retrieved successfully',

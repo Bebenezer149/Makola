@@ -11,7 +11,9 @@ class MarketplaceController extends Controller
     //
 
     public function fetchProductsForShelf(Request $request){
-       $products=Product::where('status','AVAILABLE')->get();
+       $products=Product::with('product_image')
+           ->where('status','AVAILABLE')
+           ->get();
        return response()->json($products);
     }
     public function fetchSellersForMarket(Request $request){
