@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
+use Str;
 
 class MoolreService
 {
@@ -13,6 +14,7 @@ class MoolreService
         $apiKey = config('services.moolre.api_vaskey');
         $url = config('services.moolre.api_url');
         $senderId = config('services.moolre.senderid');
+        $reference='BS-'.Str::random(8);
         $feedback = Http::withHeaders(
             [
                 'X-API-VASKEY' => $apiKey,
@@ -27,7 +29,8 @@ class MoolreService
                     'recipient' => $recipient,
                     'message' => $message
                 ]
-            ]
+            ],
+            'ref'=>$reference
         ]);
 
         return response()->json([
