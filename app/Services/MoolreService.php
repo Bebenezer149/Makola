@@ -3,38 +3,48 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
-use Str;
+use Illuminate\Support\Str;
 
 class MoolreService
 {
-
-
-    public function sendMessage(string $recipient, string $message)
+    public function sendMessage(string $recipient, string $message): array
     {
+        if (empty($recipient) || ! preg_match('/^\+?[0-9]{10,14}$/', $recipient)) {
+            throw new \InvalidArgumentException('Invalid recipient phone number.');
+        }
+
+        if (trim($message) === '') {
+            throw new \InvalidArgumentException('Message cannot be empty.');
+        }
+
         $apiKey = config('services.moolre.api_vaskey');
         $url = config('services.moolre.api_url');
         $senderId = config('services.moolre.senderid');
-        $reference='BS-'.Str::random(8);
-        $feedback = Http::withHeaders(
-            [
-                'X-API-VASKEY' => env('MOOLRE_API_VASKEY'),
-                'Content-Type' => 'application/json',
-            ]
-        )->post("https://api.moolre.com/open/sms/send", [
+
+        if (empty($apiKey) || empty($url) || empty($senderId)) {
+            throw new \RuntimeException('Moolre SMS configuration is missing.');
+        }
+
+        $response = Http::withHeaders([
+            'X-API-VASKEY' => $apiKey,
+            'Content-Type' => 'application/json',
+        ])->post($url, [
             'type' => 1,
-            'senderid' => "BlueSpace",
-            "network"=> "MTN",
+            'senderid' => $senderId,
+            "network"=> "TELECEL",
             'messages' => [
                 [
                     'recipient' => $recipient,
-                    'message' => $message
-                ]
+                    'message' => $message,
+                ],
             ],
-            'ref'=>$reference
+            'ref' => 'BS-' . Str::random(8),
         ]);
 
-        return response()->json([
-            'response'=>$feedback->json()
-        ]);
+        if (! $response->successful()) {
+            throw new \RuntimeException('Moolre SMS sending failed: ' . $response->body());
+        }
+
+        return $response->json();
     }
 }
