@@ -21,6 +21,7 @@ class MoolreService
         )->post($url, [
             'type' => 1,
             'senderid' => $senderId,
+            "network"=> "MTN",
             'messages' => [
                 [
                     'recipient' => $recipient,
