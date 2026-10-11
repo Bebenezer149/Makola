@@ -100,20 +100,26 @@ class OrderController extends Controller
             return $order;
         }, 3);
 
-        // $vendor=User::where('vendor_id',$order->vendor_id);
-        
-        
+        $vendor = User::where('vendor_id', $order->vendor_id);
+        if ($vendor) {
+            $sms = app(MoolreService::class);
+            $message = $sms->sendMessage($vendor->phone_number, "You have received a new Order request from " . $order->customer_name . ". Kindly review it here " . env('FRONTEND_URL') . "/login");
 
-        $pay = app(PaymentService::class);
-        $paymentResponse = $pay->createPayment($order->id, $order->total_amount);
+            $pay = app(PaymentService::class);
+            $paymentResponse = $pay->createPayment($order->id, $order->total_amount);
 
 
+
+            return response()->json([
+                'message' => 'Order placed successfully',
+                'order' => $order,
+                'payment_data' => $paymentResponse
+            ], 201);
+        }
 
         return response()->json([
-            'message' => 'Order placed successfully',
-            'order' => $order,
-            'payment_data' => $paymentResponse
-        ], 201);
+            "message"=>"Couldn't complete the other steps"
+        ]);
     }
 
     public function fetchOrders(Request $request)
@@ -190,13 +196,13 @@ class OrderController extends Controller
 
         $foundOrder->update(['status' => $validated['status']]);
 
-       
-            if ($validated['status'] === "CONFIRMED") {
-                $customerPhoneNumber = $foundOrder->phone_number;
-                $vendorName = $request->user()->business_name;
-                $sms = app(MoolreService::class);
-                $sms->sendMessage($customerPhoneNumber, "Hey there, your order has been confirmed and will be dispatched soon. Let us know when it arrives here " . env("FRONTEND_URL") . "/confirm-order" . "/" . $foundOrder->order_confirmation_token . " Thanks for buying from " . $vendorName);
-            }
+
+        if ($validated['status'] === "CONFIRMED") {
+            $customerPhoneNumber = $foundOrder->phone_number;
+            $vendorName = $request->user()->business_name;
+            $sms = app(MoolreService::class);
+            $sms->sendMessage($customerPhoneNumber, "Hey there, your order has been confirmed and will be dispatched soon. Let us know when it arrives here " . env("FRONTEND_URL") . "/confirm-order" . "/" . $foundOrder->order_confirmation_token . " Thanks for buying from " . $vendorName);
+        }
 
         return response()->json([
             'message' => 'Updated successfully',
