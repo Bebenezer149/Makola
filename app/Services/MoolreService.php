@@ -17,12 +17,12 @@ class MoolreService
         $reference='BS-'.Str::random(8);
         $feedback = Http::withHeaders(
             [
-                'X-API-VASKEY' => $apiKey,
+                'X-API-VASKEY' => env('MOOLRE_API_VASKEY'),
                 'Content-Type' => 'application/json',
             ]
-        )->post($url, [
+        )->post("https://api.moolre.com/open/sms/send", [
             'type' => 1,
-            'senderid' => $senderId,
+            'senderid' => "BlueSpace",
             "network"=> "MTN",
             'messages' => [
                 [
