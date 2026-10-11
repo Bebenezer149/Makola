@@ -13,12 +13,12 @@ class SendSmsJob implements ShouldQueue
     /**
      * Create a new job instance.
      */
-    private $phone;
-    private  $customer_name;
+    private string $phone;
+    private string  $customer_name;
     public function __construct(string $phone, string $customer_name)
     {
         //
-        $this->$phone = $phone;
+        $this->phone = $phone;
         $this->customer_name=$customer_name;
     }
 
