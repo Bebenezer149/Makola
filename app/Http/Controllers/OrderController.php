@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\SendSmsJob;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
@@ -98,6 +99,9 @@ class OrderController extends Controller
 
             return $order;
         }, 3);
+
+        $vendor=User::where('vendor_id',$order->vendor_id);
+        SendSmsJob::dispatch($vendor->phone_number, $order->customer_name);
 
         $pay = app(PaymentService::class);
         $paymentResponse = $pay->createPayment($order->id, $order->total_amount);
