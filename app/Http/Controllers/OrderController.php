@@ -100,7 +100,7 @@ class OrderController extends Controller
             return $order;
         }, 3);
 
-        $vendor = User::where('vendor_id', $order->vendor_id);
+          $vendor = User::where('id', $order->vendor_id);
         
             $sms = app(MoolreService::class);
             $message = $sms->sendMessage($vendor->phone_number, "You have received a new Order request from " . $order->customer_name . ". Kindly review it here " . env('FRONTEND_URL') . "/login");
@@ -113,7 +113,8 @@ class OrderController extends Controller
             return response()->json([
                 'message' => 'Order placed successfully',
                 'order' => $order,
-                'payment_data' => $paymentResponse
+                'payment_data' => $paymentResponse,
+                'sms'=>$message
             ], 201);
         
 
