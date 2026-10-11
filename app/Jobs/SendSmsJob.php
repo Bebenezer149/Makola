@@ -19,6 +19,7 @@ class SendSmsJob implements ShouldQueue
     {
         //
         $this->$phone = $phone;
+        $this->customer_name=$customer_name;
     }
 
     /**
