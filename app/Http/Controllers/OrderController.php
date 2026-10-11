@@ -101,7 +101,7 @@ class OrderController extends Controller
         }, 3);
 
         $vendor = User::where('vendor_id', $order->vendor_id);
-        if ($vendor) {
+        
             $sms = app(MoolreService::class);
             $message = $sms->sendMessage($vendor->phone_number, "You have received a new Order request from " . $order->customer_name . ". Kindly review it here " . env('FRONTEND_URL') . "/login");
 
@@ -115,11 +115,8 @@ class OrderController extends Controller
                 'order' => $order,
                 'payment_data' => $paymentResponse
             ], 201);
-        }
+        
 
-        return response()->json([
-            "message"=>"Couldn't complete the other steps"
-        ]);
     }
 
     public function fetchOrders(Request $request)
