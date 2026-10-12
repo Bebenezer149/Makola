@@ -51,7 +51,7 @@ class PaymentController extends Controller
         if ((int) $status === 1) {
             $payment->update(['payment_status' => 'PAID']);
             $order->update(['status' => 'PENDING']);
-            
+
             return response()->json([
                 'message' => 'Payment and order updated successfully',
                 'payment'=>$payment
@@ -76,5 +76,19 @@ class PaymentController extends Controller
         
 
         return $data;
+    }
+
+    public function fetchPaymentHistory(Request $request){
+        $user=$request->user();
+        if(!$user){
+            return response()->json([
+                "message"=>"Access denied"
+            ]);
+        }
+        $payment=Payment::where("vendor_id",$user->id)->get();
+        return response()->json([
+            'message'=>"success",
+            'payments'=>$payment
+        ]);
     }
 }

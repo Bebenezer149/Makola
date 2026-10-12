@@ -32,7 +32,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logoutVendor']);
     Route::put('/update-profile', [AuthController::class, 'updateUser']);
     Route::get('/user', [AuthController::class, 'fetchUser']);
-    
 });
 // ------------------------------------Product Routes------------------------------------------
 
@@ -70,24 +69,27 @@ Route::post('/reset-password', [ResetPasswordController::class, 'resetPassword']
 Route::get('/whatsapp/webhook', [WhatsAppController::class, 'verify']);
 Route::post('/whatsapp/webhook', [WhatsAppController::class, 'webhook']);
 Route::post('/send-message', [MoolreController::class, 'SendSms']);
-Route::post('/send-otp',[OtpController::class, 'sendOtp']);
-Route::post('/verify-otp',[OtpController::class, 'verifyOTP']);
+Route::post('/send-otp', [OtpController::class, 'sendOtp']);
+Route::post('/verify-otp', [OtpController::class, 'verifyOTP']);
 
 Route::get('/all-users', [AuthController::class, 'getAll']);
-Route::get("/confirm-order",[OrderController::class,'getByToken']);
+Route::get("/confirm-order", [OrderController::class, 'getByToken']);
 
 // -------------MArketplace-------------------------------------
 
-Route::get('/market-products',[MarketplaceController::class,'fetchProductsForShelf' ]);
-Route::get('/market-sellers',[MarketplaceController::class, 'fetchSellersForMarket']);
+Route::get('/market-products', [MarketplaceController::class, 'fetchProductsForShelf']);
+Route::get('/market-sellers', [MarketplaceController::class, 'fetchSellersForMarket']);
 
 //-------------------------- Payment API-----------------------------------------
 
-Route::post('/make-payment',[PaymentController::class, 'start']);
+Route::post('/make-payment', [PaymentController::class, 'start']);
 Route::post('/moolre/callback', [PaymentController::class, 'receiveCallback']);
-Route::get('/moolre/latest',[PaymentController::class, 'checkStatus']);
+Route::get('/moolre/latest', [PaymentController::class, 'checkStatus']);
 
 // ----------------- Payout API----------------------------
 
-Route::post("/verify-name",[PayoutController::class, 'verifyName']);
-Route::post("/transfer",[PayoutController::class,'initiateTransfer']);
+Route::middleware('auth-sanctum')->group(function () {
+    Route::post("/verify-name", [PayoutController::class, 'verifyName']);
+    Route::post("/transfer", [PayoutController::class, 'initiateTransfer']);
+    Route::get("/payment-history",[PaymentController::class, 'fetchPaymentHistory']);
+});

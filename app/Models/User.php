@@ -66,7 +66,7 @@ class User extends Authenticatable
       return  $this->hasMany(Order::class, 'vendor_id');
     }
 
-    public function payouts(){
-        return $this->hasMany(Payout::class, 'vendor_id');
+    public function payments(){
+        return $this->hasMany(Payment::class, 'vendor_id');
     }
 }

@@ -180,7 +180,7 @@ class PaymentService
             'externalref' => $reference,
             "currency" => "GHS",
             "accountnumber" => env('ACCOUNTNUMBER'),
-            "status" => "pending"
+            "status" => "success"
         ]);
 
 
