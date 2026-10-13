@@ -11,6 +11,7 @@ class Ledger extends Model
         'vendor_id',
         'available_balance',
         'payout_amount',
+        'status'
     ];
 
     public function vendor()

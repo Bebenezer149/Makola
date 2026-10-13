@@ -19,7 +19,7 @@ class LedgerController extends Controller
             ], 401);
         }
 
-        [$ledger, $created] = DB::transaction(function () use ($user) {
+        [$ledger, $created, $activated] = DB::transaction(function () use ($user) {
             User::whereKey($user->id)->lockForUpdate()->firstOrFail();
 
             $ledger = Ledger::firstOrCreate(
@@ -27,14 +27,23 @@ class LedgerController extends Controller
                 [
                     'available_balance' => 0,
                     'payout_amount' => 0,
+                    'status' => 'live',
                 ]
             );
 
-            return [$ledger, $ledger->wasRecentlyCreated];
+            $created = $ledger->wasRecentlyCreated;
+            $activated = $created || $ledger->status === 'Inactive';
+
+            if ($activated && ! $created) {
+                $ledger->status = 'live';
+                $ledger->save();
+            }
+
+            return [$ledger, $created, $activated];
         });
 
         return response()->json([
-            'message' => $created ? 'Wallet is now live.' : 'Wallet is already live.',
+            'message' => $activated ? 'Wallet is now live.' : 'Wallet is already live.',
             'data' => $ledger,
         ], $created ? 201 : 200);
     }
