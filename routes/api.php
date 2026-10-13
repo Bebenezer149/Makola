@@ -95,6 +95,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post("/transfer", [PayoutController::class, 'initiateTransfer']);
     Route::get('/payouts/{payout}/status', [PayoutController::class, 'checkTransferStatus']);
     Route::get("/payment-history",[TransactionsController::class, 'fetchPaymentHistory']);
-    Route::post('/activate-ledger', [LedgerController::class, 'activateLedger']);
+    Route::get('/activate-ledger', [LedgerController::class, 'activateLedger']);
     Route::get('/ledger',[LedgerController::class,'fetchLedger']);
 });

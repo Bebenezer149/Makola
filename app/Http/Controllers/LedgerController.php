@@ -34,7 +34,7 @@ class LedgerController extends Controller
         });
 
         return response()->json([
-            'message' => $created ? 'Ledger created successfully.' : 'Ledger already exists.',
+            'message' => $created ? 'Wallet is now live.' : 'Wallet is already live.',
             'data' => $ledger,
         ], $created ? 201 : 200);
     }
