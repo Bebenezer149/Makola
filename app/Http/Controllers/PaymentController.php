@@ -2,25 +2,33 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Ledger;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\User;
 use App\Services\MoolreService;
 use App\Services\PaymentService;
+use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class PaymentController extends Controller
 {
     //
-    public function start(Request $request){
-        $pay=app(PaymentService::class);
+    public function start(Request $request)
+    {
+        $validated = $request->validate([
+            'order' => ['required', 'integer', 'exists:orders,id'],
+        ]);
 
-        $data=$pay->createPayment($request->order,$request->amount);
-        return $data;
+        $order = Order::findOrFail($validated['order']);
+
+        return app(PaymentService::class)->createPayment($order);
     }
-    
-     public function receiveCallback(Request $request){
+
+    public function receiveCallback(Request $request)
+    {
         $data = $request->all();
 
         $reference = $data['data']['externalref'] ?? null;
@@ -49,12 +57,17 @@ class PaymentController extends Controller
         }
 
         if ((int) $status === 1) {
+
             $payment->update(['payment_status' => 'PAID']);
             $order->update(['status' => 'PENDING']);
+            $vendor = User::whereKey($order->vendor_id)->first();
+            $ledger = Ledger::where('vendor_id', $vendor->id)->first();
+            $ledger->increment('available_balance',$order->total_amount);
 
             return response()->json([
                 'message' => 'Payment and order updated successfully',
-                'payment'=>$payment
+                'payment' => $payment,
+                 'ledger' => $ledger,
             ]);
         }
 
@@ -63,32 +76,19 @@ class PaymentController extends Controller
 
         return response()->json([
             'message' => 'Payment failed',
-            'payment'=>$payment
+            'payment' => $payment
         ]);
     }
-    public function checkStatus(Request $request){
+    public function checkStatus(Request $request)
+    {
         $validated = $request->validate([
             'reference' => ['required', 'string'],
         ]);
 
-        $checker=app(PaymentService::class);
-        $data=$checker->checkStatus($validated['reference']);
-        
+        $checker = app(PaymentService::class);
+        $data = $checker->checkStatus($validated['reference']);
+
 
         return $data;
-    }
-
-    public function fetchPaymentHistory(Request $request){
-        $user=$request->user();
-        if(!$user){
-            return response()->json([
-                "message"=>"Access denied"
-            ]);
-        }
-        $payment=Payment::where("vendor_id",$user->id)->get();
-        return response()->json([
-            'message'=>"success",
-            'payments'=>$payment
-        ]);
     }
 }

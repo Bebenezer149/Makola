@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Jobs\SendSmsJob;
+use App\Models\Ledger;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
@@ -100,23 +101,25 @@ class OrderController extends Controller
             return $order;
         }, 3);
 
-          $vendor = User::where('id', $order->vendor_id)->first();
-        
-            $message = MoolreService::sendMessage($vendor->phone_number, "You have received a new Order request from " . $order->customer_name . ". Kindly review it here " . env('FRONTEND_URL') . "/login");
+        $vendor = User::where('id', $order->vendor_id)->first();
 
-            $pay = app(PaymentService::class);
-            $paymentResponse = $pay->createPayment($order->id, $order->total_amount);
+        $message = MoolreService::sendMessage($vendor->phone_number, "You have received a new Order request from " . $order->customer_name . ". Kindly review it here " . env('FRONTEND_URL') . "/login");
+
+        $pay = app(PaymentService::class);
+        $paymentResponse = $pay->createPayment($order);
+       
 
 
 
-            return response()->json([
-                'message' => 'Order placed successfully',
-                'order' => $order,
-                'payment_data' => $paymentResponse,
-                'sms'=>$message
-            ], 201);
-        
 
+
+        return response()->json([
+            'message' => 'Order placed successfully',
+            'order' => $order,
+            'payment_data' => $paymentResponse,
+            'sms' => $message,
+            
+        ], 201);
     }
 
     public function fetchOrders(Request $request)

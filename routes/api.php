@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ForgotPasswordController;
+use App\Http\Controllers\LedgerController;
 use App\Http\Controllers\MarketplaceController;
 use App\Http\Controllers\MoolreController;
 use App\Http\Controllers\OrderController;
@@ -12,6 +13,7 @@ use App\Http\Controllers\PayoutController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ResetPasswordController;
 use App\Http\Controllers\smessController;
+use App\Http\Controllers\TransactionsController;
 use App\Http\Controllers\WhatsAppController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -88,8 +90,11 @@ Route::get('/moolre/latest', [PaymentController::class, 'checkStatus']);
 
 // ----------------- Payout API----------------------------
 
-Route::middleware('auth-sanctum')->group(function () {
+Route::middleware('auth:sanctum')->group(function () {
     Route::post("/verify-name", [PayoutController::class, 'verifyName']);
     Route::post("/transfer", [PayoutController::class, 'initiateTransfer']);
-    Route::get("/payment-history",[PaymentController::class, 'fetchPaymentHistory']);
+    Route::get('/payouts/{payout}/status', [PayoutController::class, 'checkTransferStatus']);
+    Route::get("/payment-history",[TransactionsController::class, 'fetchPaymentHistory']);
+    Route::post('/activate-ledger', [LedgerController::class, 'activateLedger']);
+    Route::get('/ledger',[LedgerController::class,'fetchLedger']);
 });

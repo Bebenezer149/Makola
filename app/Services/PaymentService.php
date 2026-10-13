@@ -7,14 +7,17 @@ use App\Models\Payment;
 use App\Models\Payout;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Str;
 
 class PaymentService
 {
-    public function createPayment(int $order, int|float|string $amount)
+    public function createPayment(Order $order)
     {
+        $amount = $order->total_amount;
+
         // Generate reference
-        $reference = "BS-{$order}-" . strtoupper(Str::random(6));
+        $reference = "BS-{$order->id}-" . strtoupper(Str::random(6));
 
 
         // Make call to generate payment link
@@ -39,7 +42,8 @@ class PaymentService
         // If call is success create payment in DB and return response
         if ($feedback->successful()) {
             $payment = Payment::create([
-                'order_id' => $order,
+                'order_id' => $order->id,
+                'vendor_id' => $order->vendor_id,
                 'amount' => $amount,
                 "reference" => $reference,
                 "payment_status" => "PENDING"
@@ -55,7 +59,7 @@ class PaymentService
         else {
             return response()->json([
                 'message' => "Something went wrong"
-            ]);
+            ], 502);
         }
     }
 
@@ -162,15 +166,13 @@ class PaymentService
     }
 
     public function initiateTransfer(
-        int $amount,
-        string $channel,
+        int|float|string $amount,
+        int|string $channel,
         string $receiver,
-        
-    ) {
-        $reference = 'BS-' . strtoupper(Str::random(12));
 
-
-        $response = Http::withHeaders([
+        string $reference,
+    ): Response {
+        return Http::withHeaders([
             'X-API-USER' => "bluespace0fficial"
         ])->post("https://sandbox.moolre.com/open/transact/transfer", [
             'type' => "1",
@@ -182,12 +184,17 @@ class PaymentService
             "accountnumber" => env('ACCOUNTNUMBER'),
             "status" => "success"
         ]);
+    }
 
-
-        return response()->json([
-            'message' => 'Transfer accepted and recorded as pending.',
-            'data' => $response->json(),
-
-        ], 202);
+    public function checkTransferStatus(string $reference): Response
+    {
+        return Http::withHeaders([
+            'X-API-USER' => 'bluespace0fficial',
+        ])->post('https://sandbox.moolre.com/open/transact/status', [
+            'type' => 1,
+            'idtype' => 1,
+            'id' => $reference,
+            'accountnumber' => env('ACCOUNTNUMBER'),
+        ]);
     }
 }
