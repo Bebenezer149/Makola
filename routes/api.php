@@ -50,6 +50,8 @@ Route::middleware('auth:sanctum')->group(function () {
 // Customers do not need an account to place an order. The vendor is derived
 // from the selected products; clients must never supply a vendor id.
 Route::post('/create-order', [OrderController::class, 'createOrder'])->middleware('throttle:orders');
+Route::post('/delivered',[OrderController::class, 'getTokenAndUpdateStatus'])->middleware('throttle:orders');
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/orders', [OrderController::class, 'fetchOrders']);
     Route::get('/get-one-order', [OrderController::class, 'fetchOneOrder']);
@@ -75,7 +77,7 @@ Route::post('/send-otp', [OtpController::class, 'sendOtp']);
 Route::post('/verify-otp', [OtpController::class, 'verifyOTP']);
 
 Route::get('/all-users', [AuthController::class, 'getAll']);
-Route::get("/confirm-order", [OrderController::class, 'getByToken']);
+Route::get("/order-confirmation", [OrderController::class, 'getByToken']);
 
 // -------------MArketplace-------------------------------------
 
@@ -96,5 +98,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/payouts/{payout}/status', [PayoutController::class, 'checkTransferStatus']);
     Route::get("/payment-history",[TransactionsController::class, 'fetchPaymentHistory']);
     Route::get('/activate-ledger', [LedgerController::class, 'activateLedger']);
+    Route::get("/balance-details",[TransactionsController::class, 'fetchBalance']);
     Route::get('/ledger',[LedgerController::class,'fetchLedger']);
 });

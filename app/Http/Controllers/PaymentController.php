@@ -67,7 +67,6 @@ class PaymentController extends Controller
             return response()->json([
                 'message' => 'Payment and order updated successfully',
                 'payment' => $payment,
-                 'ledger' => $ledger,
             ]);
         }
 

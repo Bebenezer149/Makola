@@ -14,6 +14,7 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rules\Exists;
 use Illuminate\Validation\ValidationException;
 use Str;
 
@@ -203,11 +204,7 @@ class OrderController extends Controller
             $sms = app(MoolreService::class);
             $sms->sendMessage($customerPhoneNumber, "Hey there, your order has been confirmed and will be dispatched soon. Let us know when it arrives here " . env("FRONTEND_URL") . "/confirm-order" . "/" . $foundOrder->order_confirmation_token . " Thanks for buying from " . $vendorName);
         }
-
-        return response()->json([
-            'message' => 'Updated successfully',
-            'order' => $foundOrder
-        ]);
+       
     }
     public function deleteOrder(Request $request)
     {
@@ -230,14 +227,40 @@ class OrderController extends Controller
         }
     }
 
-    public function getByToken(Request $request)
+    public function getTokenAndUpdateStatus(Request $request)
     {
-        $token = $request->token;
+        $validated=$request->validate([
+            'token'=>"required|string",
+            'status'=>"required|string"
+        ]);
+        $token = $validated['token'];
+        $status=$validated['status'];
         $foundOrder = Order::where("order_confirmation_token", $token)->first();
         if (!$foundOrder) {
             return response()->json(["message" => "Your Order Could not be found"], 404);
         }
 
-        return response()->json(["order" => $foundOrder]);
+       if($status === "DELIVERED"){
+        $foundOrder->update(["status"=>"DELIVERED"]);
+        $ledger=Ledger::where('vendor_id',$foundOrder->vendor_id)->first();
+        $result=$ledger->increment("available_balance",$foundOrder->total_amount);
+
+        return response()->json(["order" => $foundOrder, "ledger"=>$ledger]);
+       }
+       return response()->json([ 'message'=>"couldn't update order"]);
+    }
+
+    public function getByToken(Request $request){
+        $token=$request->token;
+
+        $order=Order::where('order_confirmation_token',$token)->first();
+        if($order){
+            return response()->json([
+                'order'=>$order
+            ]);
+        }
+         return response()->json([
+                'order'=>"Couldn't find order"
+            ]);
     }
 }
