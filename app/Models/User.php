@@ -28,6 +28,7 @@ class User extends Authenticatable
         'profile_picture',
         'banner',
         'phone_number',
+        'is_verified',
         'link',
         'email',
         'password',

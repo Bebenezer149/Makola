@@ -204,7 +204,9 @@ class OrderController extends Controller
             $sms = app(MoolreService::class);
             $sms->sendMessage($customerPhoneNumber, "Hey there, your order has been confirmed and will be dispatched soon. Let us know when it arrives here " . env("FRONTEND_URL") . "/confirm-order" . "/" . $foundOrder->order_confirmation_token . " Thanks for buying from " . $vendorName);
         }
-       
+       if($validated['status']=== "CANCELLED"){
+        
+       }
     }
     public function deleteOrder(Request $request)
     {

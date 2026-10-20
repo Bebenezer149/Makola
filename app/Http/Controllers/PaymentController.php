@@ -60,15 +60,15 @@ class PaymentController extends Controller
 
             $payment->update(['payment_status' => 'PAID']);
             $order->update(['status' => 'PENDING']);
-            $vendor = User::whereKey($order->vendor_id)->first();
-            $ledger = Ledger::where('vendor_id', $vendor->id)->first();
-            $ledger->increment('available_balance',$order->total_amount);
+            
 
             return response()->json([
                 'message' => 'Payment and order updated successfully',
                 'payment' => $payment,
             ]);
         }
+
+        
 
         $payment->update(['payment_status' => 'FAILED']);
         $order->update(['status' => 'CANCELLED']);

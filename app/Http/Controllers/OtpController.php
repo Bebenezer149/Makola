@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -63,9 +64,15 @@ class OtpController extends Controller
                 "message" => "Otp is invalid please try again"
             ]);
         } else {
+
+            $user = User::where('phone_number', $request->phone_number)->first();
+            $user->update([
+                'is_verified'=>true
+            ]);
+
             return response()->json([
                 "message" => "Otp verified successfully",
-                "status" => "true"
+                "status" => $user->is_verified
             ]);
             $cachedOtp = Cache::forget('otp_' . $request->phone_number);
         }
