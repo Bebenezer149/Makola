@@ -37,8 +37,8 @@ class TransactionsController extends Controller
 
         $pendingPayment=Payment::where("vendor_id",$user->id)->where("payment_status","PENDING")->get()->sum('amount');
         return response()->json([
-            'total_payouts'=>$payoutTotal,
-            "pending_payments"=>number_format($pendingPayment,'2','.','')
+            'total_payouts'=>number_format($payoutTotal,'2','.',','),
+            "pending_payments"=>number_format($pendingPayment,'2','.',',')
         ]);
     }
 }
