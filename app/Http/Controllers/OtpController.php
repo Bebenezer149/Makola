@@ -22,7 +22,7 @@ class OtpController extends Controller
         $response = Http::withHeaders([
             'X-API-VASKEY' => config('services.moolre.api_vaskey'),
             'Content-Type' => "application/json"
-        ])->post("https://api.moolre.com/open/sms/send", [
+        ])->post("https://sandbox.moolre.com/open/sms/send", [
             "type" => 1,
             "senderid" => "BlueSpace",
             "messages" => [
