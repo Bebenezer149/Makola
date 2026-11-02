@@ -1,7 +1,7 @@
 <?php
 
 $localOrigins = 'http://localhost:5173,http://localhost:5174,http://127.0.0.1:5173,http://127.0.0.1:5174';
-$productionOrigins = 'https://blue-space-gh.vercel.app';
+$productionOrigins = 'https://bluespace.live';
 
 
 $defaultOrigins = env('APP_ENV') === 'local' ? $localOrigins : $productionOrigins;
