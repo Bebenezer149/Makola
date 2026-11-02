@@ -10,14 +10,7 @@ class Cors
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $allowedOriginsRaw = env('CORS_ALLOWED_ORIGINS', '');
-        $frontendRaw = env('FRONTEND_URL', '');
-        $fallbackOrigin = 'https://blue-space-gh.vercel.app';
-
-        $allowedOrigins = array_filter(array_map(
-            static fn($origin) => rtrim(trim((string) $origin), '/'),
-            array_filter(explode(',', $allowedOriginsRaw !== '' ? $allowedOriginsRaw : ($frontendRaw !== '' ? $frontendRaw : $fallbackOrigin)))
-        ));
+        $allowedOrigins = config('cors.allowed_origins', []);
 
         $origin = rtrim((string) $request->headers->get('Origin', ''), '/');
         $isAllowedOrigin = $origin !== '' && (in_array($origin, $allowedOrigins, true) || in_array('*', $allowedOrigins, true));
@@ -48,7 +41,6 @@ class Cors
 
         $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
 
-
         $response->headers->set(
             'Access-Control-Allow-Headers',
             (string) $request->headers->get('Access-Control-Request-Headers', '*')
@@ -58,5 +50,3 @@ class Cors
         return $response;
     }
 }
-
-
