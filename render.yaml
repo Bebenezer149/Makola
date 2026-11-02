@@ -16,11 +16,11 @@ services:
       - key: APP_URL
         value: https://makola-2.onrender.com
       - key: FRONTEND_URL
-        value: https://blue-space-gh.vercel.app
+        value: https://www.bluespace.live
       - key: CORS_ALLOWED_ORIGINS
-        value: https://blue-space-gh.vercel.app
+        value: https://bluespace.live,https://www.bluespace.live
       - key: SANCTUM_STATEFUL_DOMAINS
-        value: blue-space-gh.vercel.app
+        value: bluespace.live,www.bluespace.live
       - key: DB_CONNECTION
         value: pgsql
       - key: DB_URL
