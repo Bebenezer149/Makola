@@ -32,10 +32,10 @@ class OtpController extends Controller
     {
         $request->validate([
             'otp' => 'required|digits:6',
-            'phone_number' => 'required'
+            'phone' => 'required'
         ]);
 
-        $cachedOtp = Cache::get('otp_' . $request->phone_number);
+        $cachedOtp = Cache::get('otp_' . $request->phone);
 
         if (!$cachedOtp) {
             return response()->json([
@@ -47,7 +47,7 @@ class OtpController extends Controller
             ]);
         } else {
 
-            $user = User::where('phone_number', $request->phone_number)->first();
+            $user = User::where('phone_number', $request->phone)->first();
             $user->update([
                 'is_verified' => true
             ]);
@@ -56,7 +56,7 @@ class OtpController extends Controller
                 "message" => "Otp verified successfully",
                 "status" => $user->is_verified
             ]);
-            $cachedOtp = Cache::forget('otp_' . $request->phone_number);
+            $cachedOtp = Cache::forget('otp_' . $request->phone);
         }
     }
 }
