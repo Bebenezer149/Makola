@@ -58,4 +58,8 @@ return [
    'moolre-pay'=>[
     'api-username'=>env('X-API-USER'),
    ],
+   'paystack'=>[
+    'api_secret'=>env('PAYSTACK_TEST_SECRET_KEY'),
+    'api_url'=>env('PAYSTACK_URL')
+   ]
 ];

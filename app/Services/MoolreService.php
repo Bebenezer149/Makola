@@ -7,21 +7,28 @@ use Illuminate\Support\Facades\Http;
 class MoolreService
 {
 
-    public static function sendMessage(string $phone, string $message)
-    {
-        $response = Http::get(
-            'https://sandbox.moolre.com/open/sms/send?type=1&network=TELECEL&X-API-VASKEY='.config('services.moolre.api_vaskey').'&recipient='.$phone.'&message='.$message.'&senderid=BlueSpace'
-        );
+   public static function sendMessage(string  $phone, string $message){
+        $response=Http::withHeaders([
+            'X-API-VASKEY'=>env('MOOLRE_API_VASKEY'),
+            'Content-Type'=>'application/json'
+        ])->post('https://api.moolre.com/open/sms/send',[
+            'type'=>1,
+            'senderid'=>'BlueSpace',
+            'network'=>"MTN",
+            "messages"=>[
+                [
+                    'recipient'=>$phone,
+                    'message'=>$message
+                ]
+            ]
+        ]);
 
-        if($response->successful()){
-            return response()->json([
-                'message'=>'sent',
-                'data'=>$response->json()
-            ]);
+        if(!$response->successful()){
+            return  response()->json([
+                'message=>"Error'
+            ],433);
         }
-             return response()->json([
-                'message'=>'could not send',
-                'data'=>$response->json()
-            ]);
-        }
+
+        return $response;
+    }
 }

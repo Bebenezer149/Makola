@@ -10,6 +10,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\OtpController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PayoutController;
+use App\Http\Controllers\PaystackController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ResetPasswordController;
 use App\Http\Controllers\smessController;
@@ -90,6 +91,7 @@ Route::post('/make-payment', [PaymentController::class, 'start']);
 Route::post('/moolre/callback', [PaymentController::class, 'receiveCallback']);
 Route::get('/moolre/latest', [PaymentController::class, 'checkStatus']);
 
+
 // ----------------- Payout API----------------------------
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -101,3 +103,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get("/balance-details",[TransactionsController::class, 'fetchBalance']);
     Route::get('/ledger',[LedgerController::class,'fetchLedger']);
 });
+
+// Paystack Account creator-----------------------------
+
+
+Route::post('/paystack/create-account',[PaystackController::class,'createAccount']);
