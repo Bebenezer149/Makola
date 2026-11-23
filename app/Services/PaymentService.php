@@ -24,6 +24,7 @@ class PaymentService
         $feedback = Http::withHeaders([
             'X-API-USER' => 'bluespace0fficial',
             'Content-Type' => 'application/json',
+            'X-API-PUBKEY'=>env('X-API-PUBKEY')
         ])->post(
             'https://api.moolre.com/embed/link',
             [
