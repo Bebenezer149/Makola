@@ -2,16 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Ledger;
 use App\Models\Order;
 use App\Models\Payment;
-use App\Models\User;
-use App\Services\MoolreService;
 use App\Services\PaymentService;
-use Exception;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class PaymentController extends Controller
 {
@@ -56,31 +50,33 @@ class PaymentController extends Controller
             ], 404);
         }
 
-        if ((int) $status === 1) {
+        $paymentService = app(PaymentService::class);
 
-           DB::transaction(function() use($payment,$order){
-             $payment->update(['payment_status' => 'PAID']);
-             $order->update(['status' => 'PENDING']);
-           });
-            
-
+        if ((string) $status === '1') {
+            $paymentService->markPaymentPaid($payment);
+            $payment->refresh();
             return response()->json([
                 'message' => 'Payment and order updated successfully',
                 'payment' => $payment,
             ]);
         }
 
-        
-        else{
-            
-        $payment->update(['payment_status' => 'FAILED']);
-        $order->update(['status' => 'CANCELLED']);
+        if ((string) $status === '3') {
+            $paymentService->markPaymentFailed($payment);
+            $payment->refresh();
+
+            return response()->json([
+                'message' => $payment->payment_status === 'FAILED'
+                    ? 'Payment failed'
+                    : 'Payment has already been confirmed',
+                'payment' => $payment,
+            ]);
+        }
 
         return response()->json([
-            'message' => 'Payment failed',
-            'payment' => $payment
+            'message' => 'Payment status received',
+            'payment_status' => $payment->payment_status,
         ]);
-        }
     }
     public function checkStatus(Request $request)
     {

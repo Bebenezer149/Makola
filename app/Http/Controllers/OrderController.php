@@ -7,7 +7,6 @@ use App\Models\Ledger;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
-use App\Models\User;
 use App\Services\MoolreService;
 use App\Services\PaymentService;
 use Exception;
@@ -101,30 +100,31 @@ class OrderController extends Controller
             return $order;
         }, 3);
 
-        $vendor = User::where('id', $order->vendor_id)->first();
-
-        $message = MoolreService::sendMessage($vendor->phone_number, "You have received a new Order request from " . $order->customer_name . ". Kindly review it here " . env('FRONTEND_URL') . "/login");
-
         $pay = app(PaymentService::class);
         $paymentResponse = $pay->createPayment($order);
 
+        if ($paymentResponse->getStatusCode() >= 400) {
+            $this->releaseOrderReservation($order->id);
 
-
-
-
+            return response()->json([
+                'message' => 'Could not start payment for this order.',
+                'payment_data' => $paymentResponse->getData(true),
+            ], $paymentResponse->getStatusCode());
+        }
 
         return response()->json([
-            'message' => 'Order placed successfully',
+            'message' => 'Order created. Complete payment to submit it to the seller.',
             'order' => $order,
             'payment_data' => $paymentResponse,
-            'sms' => $message,
-
         ], 201);
     }
 
     public function fetchOrders(Request $request)
     {
-        $foundOrder = Order::where('vendor_id', auth()->id())->orderBy('created_at', 'desc')->get();
+        $foundOrder = Order::paid()
+            ->where('vendor_id', auth()->id())
+            ->orderBy('created_at', 'desc')
+            ->get();
 
 
         return response()->json([
@@ -137,7 +137,8 @@ class OrderController extends Controller
     {
         $id = $request->input('id');
 
-        $foundOrder = Order::where('vendor_id', auth()->id())
+        $foundOrder = Order::paid()
+            ->where('vendor_id', auth()->id())
             ->where('id', $id)
             ->with('Items.product')
             ->firstOrFail();
@@ -192,6 +193,12 @@ class OrderController extends Controller
             $foundOrder = Order::where('vendor_id', $request->user()->id)
                 ->lockForUpdate()
                 ->findOrFail($validated['id']);
+
+            if (! $foundOrder->payments()->where('payment_status', 'PAID')->exists()) {
+                throw ValidationException::withMessages([
+                    'payment' => 'The order cannot be processed until payment is confirmed.',
+                ]);
+            }
 
             if (! in_array($validated['status'], $allowedTransitions[$foundOrder->status] ?? [], true)) {
                 throw ValidationException::withMessages([
@@ -301,6 +308,12 @@ class OrderController extends Controller
                 ]);
             }
 
+            if (! $foundOrder->payments()->where('payment_status', 'PAID')->exists()) {
+                throw ValidationException::withMessages([
+                    'payment' => 'The order cannot be delivered until payment is confirmed.',
+                ]);
+            }
+
             if ($foundOrder->status === 'DELIVERED') {
                 $ledger = Ledger::where('vendor_id', $foundOrder->vendor_id)->first();
                 return [$foundOrder, $ledger];
@@ -336,6 +349,37 @@ class OrderController extends Controller
             'order' => $foundOrder,
             'ledger' => $ledger,
         ]);
+    }
+
+    private function releaseOrderReservation(int $orderId): void
+    {
+        DB::transaction(function () use ($orderId) {
+            $order = Order::whereKey($orderId)->lockForUpdate()->firstOrFail();
+
+            if ($order->status !== 'PENDING' || $order->payments()->where('payment_status', 'PAID')->exists()) {
+                return;
+            }
+
+            $items = OrderItem::where('order_id', $order->id)
+                ->lockForUpdate()
+                ->get();
+
+            foreach ($items as $item) {
+                $product = Product::whereKey($item->product_id)
+                    ->lockForUpdate()
+                    ->first();
+
+                if ($product) {
+                    $remainingQuantity = $product->quantity + $item->quantity;
+                    $product->update([
+                        'quantity' => $remainingQuantity,
+                        'status' => $remainingQuantity > 0 ? 'AVAILABLE' : 'OUT_OF_STOCK',
+                    ]);
+                }
+            }
+
+            $order->update(['status' => 'CANCELLED']);
+        });
     }
 
     public function getByToken(Request $request)

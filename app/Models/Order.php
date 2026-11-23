@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 
 class Order extends Model
 {
@@ -40,6 +41,12 @@ class Order extends Model
     public function payments(){
         return $this->hasMany(Payment::class, "order_id");
     }
+
+    public function scopePaid(Builder $query): Builder
+    {
+        return $query->whereHas('payments', fn (Builder $payments) => $payments->where('payment_status', 'PAID'));
+    }
+
     // public function payouts(){
     //     return $this->hasMany(Payout::class,'order_id');
     // }

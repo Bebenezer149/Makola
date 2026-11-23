@@ -14,7 +14,7 @@ class MoolreService
         ])->post('https://api.moolre.com/open/sms/send',[
             'type'=>1,
             'senderid'=>'BlueSpace',
-            'network'=>"MTN",
+            'network'=>"TELECEL",
             "messages"=>[
                 [
                     'recipient'=>$phone,
@@ -25,8 +25,8 @@ class MoolreService
 
         if(!$response->successful()){
             return  response()->json([
-                'message=>"Error'
-            ],433);
+                'message'=>"Error"
+            ]);
         }
 
         return $response;

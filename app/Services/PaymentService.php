@@ -5,8 +5,10 @@ namespace App\Services;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\Payout;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Str;
 
@@ -103,10 +105,7 @@ class PaymentService
                 ], 404);
             }
 
-            DB::transaction(function () use ($payment, $order) {
-                $payment->update(['payment_status' => 'PAID']);
-                $order->update(['status' => 'PENDING']);
-            });
+            $this->markPaymentPaid($payment);
 
             return response()->json([
                 'message' => $feedback->json(),
@@ -117,12 +116,15 @@ class PaymentService
         }
 
         if (in_array($status, [3, '3'], true)) {
-            $payment->update(['payment_status' => 'FAILED']);
+            $this->markPaymentFailed($payment);
+            $payment->refresh();
 
             return response()->json([
-                'message' => 'Payment failed',
-                'payment_status' => 'FAILED',
-                'redirect' => "/failed",
+                'message' => $payment->payment_status === 'FAILED'
+                    ? 'Payment failed'
+                    : 'Payment has already been confirmed',
+                'payment_status' => $payment->payment_status,
+                'redirect' => $payment->payment_status === 'FAILED' ? '/failed' : '/success',
             ]);
         }
         if (in_array($status, [0, '0'], true)) {
@@ -137,8 +139,69 @@ class PaymentService
         }
         return response()->json([
             'message' => 'Payment is still pending',
-            'payment_status' => "PAID",
+            'payment_status' => $payment->payment_status,
         ]);
+    }
+
+    public function markPaymentPaid(Payment $payment): bool
+    {
+        $orderId = DB::transaction(function () use ($payment) {
+            $lockedPayment = Payment::whereKey($payment->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ($lockedPayment->payment_status === 'PAID') {
+                return null;
+            }
+
+            $order = Order::whereKey($lockedPayment->order_id)
+                ->lockForUpdate()
+                ->firstOrFail();
+            $alreadyPaid = $order->payments()
+                ->where('payment_status', 'PAID')
+                ->exists();
+
+            $lockedPayment->update(['payment_status' => 'PAID']);
+
+            return $alreadyPaid ? null : $order->id;
+        });
+
+        if ($orderId === null) {
+            return false;
+        }
+
+        $order = Order::with('vendor')->findOrFail($orderId);
+
+        try {
+            MoolreService::sendMessage(
+                $order->vendor->phone_number,
+                "Payment received for order #" . $order->id . ". Kindly review it here " . env('FRONTEND_URL') . "/login"
+            );
+        } catch (ConnectionException $exception) {
+            Log::warning('Paid order seller notification failed.', [
+                'order_id' => $order->id,
+                'exception' => $exception->getMessage(),
+            ]);
+        }
+
+        return true;
+    }
+
+    public function markPaymentFailed(Payment $payment): bool
+    {
+        return DB::transaction(function () use ($payment) {
+            $lockedPayment = Payment::whereKey($payment->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ($lockedPayment->payment_status !== 'PENDING') {
+                return false;
+            }
+
+            $lockedPayment->update(['payment_status' => 'FAILED']);
+
+            return true;
+        });
     }
 
     public function verifyName(string $receiver, string $channel)

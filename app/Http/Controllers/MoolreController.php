@@ -11,9 +11,17 @@ class MoolreController extends Controller
     //
     public function sendSms(Request $request)
     {
-      
+      $validate=$request->validate([
+        'phone'=>'string|max:14|min:10|required',
+        'message'=>"string|required"
+      ]);
 
-      return MoolreService::sendMessage($request->recipient, $request->message);
+      $response=MoolreService::sendMessage($validate['phone'], $validate['message']);
+
+      return response()->json([
+        'message'=>"Here",
+       
+      ]);
 
      
     }
