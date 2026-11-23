@@ -30,14 +30,13 @@ class OrderController extends Controller
             'phone_number' => 'required|string|max:255',
             'delivery_to' => 'required|string|max:255',
             'additional_notes' => 'required|string',
-
-            'payment_method' => 'required|in:MOMO,CASH',
             'items' => 'required|array|min:1|max:100',
             'items.*.product_id' => 'required|integer|exists:products,id',
             'items.*.quantity' => 'required|integer|min:1',
         ]);
 
         $order = DB::transaction(function () use ($validated) {
+            // Collect the array into requested quantities and sum each item
             $requestedQuantities = collect($validated['items'])
                 ->groupBy('product_id')
                 ->map(fn($items) => $items->sum('quantity'));
@@ -67,7 +66,7 @@ class OrderController extends Controller
                 'phone_number' => $validated['phone_number'],
                 'delivery_to' => $validated['delivery_to'],
                 'additional_notes' => $validated['additional_notes'],
-                'payment_method' => $validated['payment_method'],
+                'payment_method' => "MOMO",
                 'status' => 'PENDING',
                 'total_amount' => 0,
             ]);
@@ -108,7 +107,7 @@ class OrderController extends Controller
 
         $pay = app(PaymentService::class);
         $paymentResponse = $pay->createPayment($order);
-       
+
 
 
 
@@ -119,7 +118,7 @@ class OrderController extends Controller
             'order' => $order,
             'payment_data' => $paymentResponse,
             'sms' => $message,
-            
+
         ], 201);
     }
 
@@ -177,36 +176,87 @@ class OrderController extends Controller
     }
     public function updateStatus(Request $request)
     {
-
         $validated = $request->validate([
             'id' => 'required|integer',
             'status' => 'required|in:PENDING,CONFIRMED,DELIVERED,CANCELLED',
         ]);
 
-        $foundOrder = Order::where('vendor_id', $request->user()->id)->findOrFail($validated['id']);
-        $allowedTransitions = [ // Defines the state machine for order statuses
+        $allowedTransitions = [
             'PENDING' => ['CONFIRMED', 'CANCELLED'],
             'CONFIRMED' => ['DELIVERED', 'CANCELLED'],
             'DELIVERED' => [],
             'CANCELLED' => [],
         ];
 
-        if (! in_array($validated['status'], $allowedTransitions[$foundOrder->status] ?? [], true)) {
-            return response()->json(['message' => 'This order status transition is not allowed.'], 422);
+        $foundOrder = DB::transaction(function () use ($request, $validated, $allowedTransitions) {
+            $foundOrder = Order::where('vendor_id', $request->user()->id)
+                ->lockForUpdate()
+                ->findOrFail($validated['id']);
+
+            if (! in_array($validated['status'], $allowedTransitions[$foundOrder->status] ?? [], true)) {
+                throw ValidationException::withMessages([
+                    'status' => 'This order status transition is not allowed.',
+                ]);
+            }
+
+            if ($validated['status'] === 'CANCELLED') {
+                $items = OrderItem::where('order_id', $foundOrder->id)
+                    ->lockForUpdate()
+                    ->get();
+
+                foreach ($items as $item) {
+                    $product = Product::whereKey($item->product_id)
+                        ->lockForUpdate()
+                        ->first();
+
+                    if ($product) {
+                        $remainingQuantity = $product->quantity + $item->quantity;
+                        $product->update([
+                            'quantity' => $remainingQuantity,
+                            'status' => 'AVAILABLE',
+                        ]);
+                    }
+                }
+            }
+
+            if ($validated['status'] === 'DELIVERED') {
+                $ledger = Ledger::where('vendor_id', $foundOrder->vendor_id)
+                    ->lockForUpdate()
+                    ->first();
+
+                if (! $ledger) {
+                    $ledger = Ledger::create([
+                        'vendor_id' => $foundOrder->vendor_id,
+                        'available_balance' => 0,
+                        'payout_amount' => 0,
+                        'status' => 'live',
+                    ]);
+                }
+
+                $ledger->increment('available_balance', $foundOrder->total_amount);
+            }
+
+            $foundOrder->update(['status' => $validated['status']]);
+
+            return $foundOrder;
+        });
+
+        $sms = null;
+
+        if ($validated['status'] === 'CONFIRMED') {
+            $sms = MoolreService::sendMessage(
+                $foundOrder->phone_number,
+                "Hey there, your order has been confirmed and will be dispatched soon. Let us know when it arrives here " .
+                    env('FRONTEND_URL') . '/confirm-order/' . $foundOrder->order_confirmation_token .
+                    ' Thanks for buying from ' . $request->user()->business_name
+            );
         }
 
-        $foundOrder->update(['status' => $validated['status']]);
-
-
-        if ($validated['status'] === "CONFIRMED") {
-            $customerPhoneNumber = $foundOrder->phone_number;
-            $vendorName = $request->user()->business_name;
-            $sms = app(MoolreService::class);
-            $sms->sendMessage($customerPhoneNumber, "Hey there, your order has been confirmed and will be dispatched soon. Let us know when it arrives here " . env("FRONTEND_URL") . "/confirm-order" . "/" . $foundOrder->order_confirmation_token . " Thanks for buying from " . $vendorName);
-        }
-       if($validated['status']=== "CANCELLED"){
-        
-       }
+        return response()->json([
+            'message' => 'Order status updated successfully',
+            'order' => $foundOrder,
+            'sms' => $sms,
+        ]);
     }
     public function deleteOrder(Request $request)
     {
@@ -231,38 +281,75 @@ class OrderController extends Controller
 
     public function getTokenAndUpdateStatus(Request $request)
     {
-        $validated=$request->validate([
-            'token'=>"required|string",
-            'status'=>"required|string"
+        $validated = $request->validate([
+            'token' => 'required|string',
+            'status' => 'required|string',
         ]);
-        $token = $validated['token'];
-        $status=$validated['status'];
-        $foundOrder = Order::where("order_confirmation_token", $token)->first();
-        if (!$foundOrder) {
-            return response()->json(["message" => "Your Order Could not be found"], 404);
+
+        if ($validated['status'] !== 'DELIVERED') {
+            return response()->json(['message' => "Couldn't update order"], 422);
         }
 
-       if($status === "DELIVERED"){
-        $foundOrder->update(["status"=>"DELIVERED"]);
-        $ledger=Ledger::where('vendor_id',$foundOrder->vendor_id)->first();
-        $result=$ledger->increment("available_balance",$foundOrder->total_amount);
+        [$foundOrder, $ledger] = DB::transaction(function () use ($validated) {
+            $foundOrder = Order::where('order_confirmation_token', $validated['token'])
+                ->lockForUpdate()
+                ->first();
 
-        return response()->json(["order" => $foundOrder, "ledger"=>$ledger]);
-       }
-       return response()->json([ 'message'=>"couldn't update order"]);
+            if (! $foundOrder) {
+                throw ValidationException::withMessages([
+                    'token' => 'Your order could not be found.',
+                ]);
+            }
+
+            if ($foundOrder->status === 'DELIVERED') {
+                $ledger = Ledger::where('vendor_id', $foundOrder->vendor_id)->first();
+                return [$foundOrder, $ledger];
+            }
+
+            if ($foundOrder->status !== 'CONFIRMED') {
+                throw ValidationException::withMessages([
+                    'status' => 'Only confirmed orders can be marked as delivered.',
+                ]);
+            }
+
+            $ledger = Ledger::where('vendor_id', $foundOrder->vendor_id)
+                ->lockForUpdate()
+                ->first();
+
+            if (! $ledger) {
+                $ledger = Ledger::create([
+                    'vendor_id' => $foundOrder->vendor_id,
+                    'available_balance' => 0,
+                    'payout_amount' => 0,
+                    'status' => 'live',
+                ]);
+            }
+
+            $ledger->increment('available_balance', $foundOrder->total_amount);
+            $foundOrder->update(['status' => 'DELIVERED']);
+
+            return [$foundOrder, $ledger];
+        });
+
+        return response()->json([
+            'message' => 'Order delivered successfully',
+            'order' => $foundOrder,
+            'ledger' => $ledger,
+        ]);
     }
 
-    public function getByToken(Request $request){
-        $token=$request->token;
+    public function getByToken(Request $request)
+    {
+        $token = $request->token;
 
-        $order=Order::where('order_confirmation_token',$token)->first();
-        if($order){
+        $order = Order::where('order_confirmation_token', $token)->first();
+        if ($order) {
             return response()->json([
-                'order'=>$order
+                'order' => $order
             ]);
         }
-         return response()->json([
-                'order'=>"Couldn't find order"
-            ]);
+        return response()->json([
+            'order' => "Couldn't find order"
+        ]);
     }
 }

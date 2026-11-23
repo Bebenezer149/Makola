@@ -58,8 +58,10 @@ class PaymentController extends Controller
 
         if ((int) $status === 1) {
 
-            $payment->update(['payment_status' => 'PAID']);
-            $order->update(['status' => 'PENDING']);
+           DB::transaction(function() use($payment,$order){
+             $payment->update(['payment_status' => 'PAID']);
+             $order->update(['status' => 'PENDING']);
+           });
             
 
             return response()->json([
@@ -69,7 +71,8 @@ class PaymentController extends Controller
         }
 
         
-
+        else{
+            
         $payment->update(['payment_status' => 'FAILED']);
         $order->update(['status' => 'CANCELLED']);
 
@@ -77,6 +80,7 @@ class PaymentController extends Controller
             'message' => 'Payment failed',
             'payment' => $payment
         ]);
+        }
     }
     public function checkStatus(Request $request)
     {

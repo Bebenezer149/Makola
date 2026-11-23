@@ -25,7 +25,7 @@ class PaymentService
             'X-API-USER' => 'bluespace0fficial',
             'Content-Type' => 'application/json',
         ])->post(
-            'https://sandbox.moolre.com/embed/link',
+            'https://api.moolre.com/embed/link',
             [
                 'type' => 1,
                 'amount' => $amount,
