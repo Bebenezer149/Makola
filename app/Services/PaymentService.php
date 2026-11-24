@@ -207,8 +207,9 @@ class PaymentService
     public function verifyName(string $receiver, string $channel)
     {
         $response = Http::withHeaders([
-            'X-API-USER' => "bluespace0fficial"
-        ])->post("https://sandbox.moolre.com/open/transact/validate", [
+            'X-API-USER' => "bluespace0fficial",
+            'X-API-PUBKEY'=>env('PUBKEY')
+        ])->post("https://api.moolre.com/open/transact/validate", [
             'type' => "1",
             "receiver" => $receiver,
             "channel" => $channel,
@@ -225,7 +226,7 @@ class PaymentService
 
         return response()->json([
             "message" => "Receiver found",
-            "data" => $response->json()
+            "body" => $response->json('data')
         ]);
     }
 
@@ -237,8 +238,9 @@ class PaymentService
         string $reference,
     ): Response {
         return Http::withHeaders([
-            'X-API-USER' => "bluespace0fficial"
-        ])->post("https://sandbox.moolre.com/open/transact/transfer", [
+            'X-API-USER' => "bluespace0fficial",
+            'X-API-KEY'=>env('PRIVATE')
+        ])->post("https://api.moolre.com/open/transact/transfer", [
             'type' => "1",
             "receiver" => $receiver,
             'amount' => $amount,
