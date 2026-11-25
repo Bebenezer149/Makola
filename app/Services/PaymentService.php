@@ -26,7 +26,7 @@ class PaymentService
         $feedback = Http::withHeaders([
             'X-API-USER' => 'bluespace0fficial',
             'Content-Type' => 'application/json',
-            'X-API-PUBKEY'=>env('X-API-PUBKEY')
+            'X-API-PUBKEY' => env('X-API-PUBKEY')
         ])->post(
             'https://api.moolre.com/embed/link',
             [
@@ -208,7 +208,7 @@ class PaymentService
     {
         $response = Http::withHeaders([
             'X-API-USER' => "bluespace0fficial",
-            'X-API-PUBKEY'=>env('PUBKEY')
+            'X-API-PUBKEY' => env('X-API-PUBKEY')
         ])->post("https://api.moolre.com/open/transact/validate", [
             'type' => "1",
             "receiver" => $receiver,
@@ -239,7 +239,7 @@ class PaymentService
     ): Response {
         return Http::withHeaders([
             'X-API-USER' => "bluespace0fficial",
-            'X-API-KEY'=>env('PRIVATE')
+            'X-API-KEY' => env('PRIVATE')
         ])->post("https://api.moolre.com/open/transact/transfer", [
             'type' => "1",
             "receiver" => $receiver,
