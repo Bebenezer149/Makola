@@ -15,6 +15,8 @@ class Order extends Model
         'delivery_to',
         'additional_notes',
         'status',
+        'subtotal_amount',
+        'commission_amount',
         'total_amount',
         'payment_method',
         'order_confirmation_token'
@@ -25,7 +27,11 @@ class Order extends Model
 
     protected function casts(): array
     {
-        return ['total_amount' => 'decimal:2'];
+        return [
+            'subtotal_amount' => 'decimal:2',
+            'commission_amount' => 'decimal:2',
+            'total_amount' => 'decimal:2',
+        ];
     }
 
     public function vendor()

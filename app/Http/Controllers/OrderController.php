@@ -95,7 +95,14 @@ class OrderController extends Controller
 
 
             $token = Str::random(8);
-            $order->update(['total_amount' => round($total, 2), 'order_confirmation_token' => $token]);
+            $subtotal = round($total, 2);
+            $commission = min(round($subtotal * 0.02, 2), 5.00);
+            $order->update([
+                'subtotal_amount' => $subtotal,
+                'commission_amount' => $commission,
+                'total_amount' => round($subtotal + $commission, 2),
+                'order_confirmation_token' => $token,
+            ]);
 
             return $order;
         }, 3);
@@ -240,7 +247,7 @@ class OrderController extends Controller
                     ]);
                 }
 
-                $ledger->increment('available_balance', $foundOrder->total_amount);
+                $ledger->increment('available_balance', $foundOrder->subtotal_amount);
             }
 
             $foundOrder->update(['status' => $validated['status']]);
@@ -338,7 +345,7 @@ class OrderController extends Controller
                 ]);
             }
 
-            $ledger->increment('available_balance', $foundOrder->total_amount);
+            $ledger->increment('available_balance', $foundOrder->subtotal_amount);
             $foundOrder->update(['status' => 'DELIVERED']);
 
             return [$foundOrder, $ledger];

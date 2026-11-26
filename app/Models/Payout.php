@@ -11,6 +11,8 @@ class Payout extends Model
         'vendor_id',
         'ledger_id',
         'payout_amount',
+        'service_fee',
+        'transfer_amount',
         'receiver',
         'account_number',
         'channel',
@@ -19,6 +21,15 @@ class Payout extends Model
         'idempotency_key'
 
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'payout_amount' => 'decimal:2',
+            'service_fee' => 'decimal:2',
+            'transfer_amount' => 'decimal:2',
+        ];
+    }
 
     public function user(){
         return $this->belongsTo(User::class,'vendor_id');

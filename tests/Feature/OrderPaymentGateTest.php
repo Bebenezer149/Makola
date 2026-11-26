@@ -122,6 +122,8 @@ class OrderPaymentGateTest extends TestCase
             'additional_notes' => 'Leave at reception',
             'payment_method' => 'MOMO',
             'status' => 'PENDING',
+            'subtotal_amount' => 45,
+            'commission_amount' => 0,
             'total_amount' => 45,
             'order_confirmation_token' => 'order-token-123',
         ]);

@@ -46,8 +46,11 @@ class PayoutController extends Controller
             'idempotency_key' => ['required', 'string', 'max:100'],
         ]);
 
+        $payoutAmount = round((float) $validated['amount'], 2);
+        $serviceFee = round($payoutAmount * 0.03, 2);
+        $transferAmount = round($payoutAmount - $serviceFee, 2);
         $reference = 'BS-' . strtoupper(Str::random(12));
-        $result = DB::transaction(function () use ($validated, $user, $reference) {
+        $result = DB::transaction(function () use ($validated, $user, $reference, $payoutAmount, $serviceFee, $transferAmount) {
             $ledger = Ledger::where('vendor_id', $user->id)
                 ->lockForUpdate()
                 ->first();
@@ -67,8 +70,8 @@ class PayoutController extends Controller
             }
 
             $reserved = Ledger::whereKey($ledger->id)
-                ->where('available_balance', '>=', $validated['amount'])
-                ->decrement('available_balance', $validated['amount']);
+                ->where('available_balance', '>=', $payoutAmount)
+                ->decrement('available_balance', $payoutAmount);
 
             if (! $reserved) {
                 throw ValidationException::withMessages([
@@ -79,7 +82,9 @@ class PayoutController extends Controller
             $payout = Payout::create([
                 'vendor_id' => $user->id,
                 'ledger_id' => $ledger->id,
-                'payout_amount' => $validated['amount'],
+                'payout_amount' => $payoutAmount,
+                'service_fee' => $serviceFee,
+                'transfer_amount' => $transferAmount,
                 'receiver' => $validated['receiver'],
                 'account_number' => $validated['receiver'],
                 'channel' => $validated['channel'],
@@ -98,12 +103,13 @@ class PayoutController extends Controller
                 'payout_id' => $payout->id,
                 'reference' => $payout->reference,
                 'payout_status' => $payout->payout_status,
+                'amounts' => $this->payoutAmounts($payout),
             ], $payout->payout_status === 'PENDING' ? 202 : 200);
         }
 
         try {
             $providerResponse = app(PaymentService::class)->initiateTransfer(
-                $validated['amount'],
+                $payout->transfer_amount,
                 $validated['channel'],
                 $validated['receiver'],
                 $payout->reference
@@ -120,6 +126,7 @@ class PayoutController extends Controller
                 'payout_id' => $payout->id,
                 'reference' => $payout->reference,
                 'payout_status' => 'PENDING',
+                'amounts' => $this->payoutAmounts($payout),
             ], 202);
         }
 
@@ -136,6 +143,7 @@ class PayoutController extends Controller
                 'payout_id' => $payout->id,
                 'reference' => $payout->reference,
                 'payout_status' => $payoutStatus,
+                'amounts' => $this->payoutAmounts($payout),
             ], 202);
         }
 
@@ -148,6 +156,7 @@ class PayoutController extends Controller
             'payout_id' => $payout->id,
             'reference' => $payout->reference,
             'payout_status' => $payoutStatus,
+            'amounts' => $this->payoutAmounts($payout),
         ], $payoutStatus === 'REFUNDED' ? 422 : ($payoutStatus === 'RELEASED' ? 200 : 202));
     }
 
@@ -161,6 +170,7 @@ class PayoutController extends Controller
             return response()->json([
                 'reference' => $payout->reference,
                 'payout_status' => $payout->payout_status,
+                'amounts' => $this->payoutAmounts($payout),
             ]);
         }
 
@@ -186,6 +196,7 @@ class PayoutController extends Controller
                 'payout_id' => $payout->id,
                 'reference' => $payout->reference,
                 'payout_status' => 'PENDING',
+                'amounts' => $this->payoutAmounts($payout),
             ], 202);
         }
 
@@ -200,7 +211,17 @@ class PayoutController extends Controller
             'payout_id' => $payout->id,
             'reference' => $payout->reference,
             'payout_status' => $payoutStatus,
+            'amounts' => $this->payoutAmounts($payout),
         ], $payoutStatus === 'PENDING' ? 202 : 200);
+    }
+
+    private function payoutAmounts(Payout $payout): array
+    {
+        return [
+            'requested_amount' => $payout->payout_amount,
+            'service_fee' => $payout->service_fee,
+            'transfer_amount' => $payout->transfer_amount,
+        ];
     }
 
     private function applyProviderStatus(int $payoutId, mixed $providerStatus): string

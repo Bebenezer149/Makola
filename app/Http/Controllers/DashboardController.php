@@ -18,7 +18,7 @@ class DashboardController extends Controller
         $deliveredOrder=Order::paid()->where('vendor_id', $vendor_id)->where('status', 'DELIVERED')->count();
         $cancelledOrder=Order::paid()->where('vendor_id', $vendor_id)->where('status', 'CANCELLED')->count();
         $pendingOrders=Order::paid()->where('vendor_id',$vendor_id)->where('status', 'PENDING')->count();
-        $totalRevenue=Order::paid()->where('vendor_id', $vendor_id)->where('status','DELIVERED')->sum('total_amount');
+        $totalRevenue=Order::paid()->where('vendor_id', $vendor_id)->where('status','DELIVERED')->sum('subtotal_amount');
 
         // if('vendor_id' !== $vendor_id){
         //     return response([
